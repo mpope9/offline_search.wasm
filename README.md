@@ -1,4 +1,7 @@
-# lunr.wasm
+# offline-search.wasm
+
+### Warning
+This library is a WIP, and not all features present in this README are implemented.
 
 This is a library to generate Webassembly bindings for a full-text search index backed by [xor_filters](https://github.com/FastFilter/xor_singleheader). It is a bastardazation of concepts Tinysearch & lunr.js, and it strives to strike a balance between the highest level of size efficiency, performance, and features.
 
@@ -16,23 +19,23 @@ In comparision to `elasticlunr.js`:
 1) Smaller and more efficient.
   * TODO: metrics.
   * elasticlunr.js ships indexes as a list of strings.
-  * lunr.wasm ships indexes as a [xor_filter](https://github.com/FastFilter/xor_singleheader), wihch are more space efficient.
+  * offline-search.wasm ships indexes as a [xor_filter](https://github.com/FastFilter/xor_singleheader), wihch are more space efficient.
 2) Does not support languages outside of English.
   * Yet.
 3) Support for [stemming](https://en.wikipedia.org/wiki/Stemming)!
   * elasticlunr.js uses a [Javascript stemmer](https://github.com/weixsong/elasticlunr.js/blob/master/lib/stemmer.js) based off of the [PorterStemmer](https://tartarus.org/martin/PorterStemmer/index.html).
-  * lunr.wasm compiles the [C version of PorterStemmer](https://tartarus.org/martin/PorterStemmer/c.txt) into the WASM. It results in a smaller, optimized binary.
+  * offline-search.wasm compiles the [C version of PorterStemmer](https://tartarus.org/martin/PorterStemmer/c.txt) into the WASM. It results in a smaller, optimized binary.
 4) No support for Query-Time Boosting.
   * I have no intention of implementing this feature, however I am open to a pull request if it is mostly in C code :)
 
 In comparision to `Tinysearch`:
 1) Written in C.
   * Tinysearch is written in rust, and requires Cargo for installation.
-  * lunr.wasm is written mostly in C and Javascript, and only relies on Node.js to be installed.
+  * offline-search.wasm is written mostly in C and Javascript, and only relies on Node.js to be installed.
   * I believe this is more 'familiar' to those in the web world.
 2) Smaller
   * Tinysearch utilizes [Bloom Filters]() to create indexes.
-  * lunr.wasm utilizes [xor_filters]() to create indexes. These are smaller in size than Bloom Filters, and have a smaller false positive rate.
+  * offline-search.wasm utilizes [xor_filters]() to create indexes. These are smaller in size than Bloom Filters, and have a smaller false positive rate.
 3) More features
   * Stemming through the PorterStemmer.
   * [Stop word](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html) filtering, which should result in even smaller binaries.
@@ -53,8 +56,8 @@ Example input file with default configuration:
 {
    "configuration": 
       {
-         "lunr_output": "_build/lunr/",
-         "filter_binary_output": "filters/"
+         "index_output": "_build/output/",
+         "filter_binary_output": "filters"
       },
    "values": 
       [
@@ -72,7 +75,7 @@ Example input file for reading HTML files located in a directory from specified 
 {
    "configuration":
       {
-         "lunr_output": "_build/lunr/",
+         "index_output": "_build/output/",
          "filter_binary_output": "filters/",
          "mode": "html_parser"
       },
@@ -86,7 +89,7 @@ Example input file for reading HTML files located in a directory from specified 
 }
 ```
 
-This will build the WebAssembly and JS glue code to `_build/lunr/` and the filters to `_build/lunr/filters/`. The `lunr` folder can be copied to your base Javascript directory. The lunr.wasm lib will auto-load the Webassembly and load the binaries. It can be used as follows:
+This will build the WebAssembly and JS glue code to `_build/output/` and the filters to `_build/ouput/`. The `lunr` folder can be copied to your base Javascript directory. The offline-search.wasm
 ```javascript
 ```
 
@@ -95,6 +98,6 @@ This will build the WebAssembly and JS glue code to `_build/lunr/` and the filte
 ### Producer
 The first part to the library is the Producer. This is a NodeJS + WebAssembly module that takes the input JSON, and transforms it into a xor_filter binaries. It tokenizes and applies stemming to the input, distills them down to hashes, then writes the files to the local file system defined in the configuration chunk. This is just for transformation, and will not be used by the browser.
 
-### xorlunr
+### offline-search.wasm
 This is the library that your Javascript code should use. It will initialize the Webassembly code and load the index.
 
