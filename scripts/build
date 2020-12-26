@@ -1,0 +1,14 @@
+#!/bin/bash
+
+###
+# Script to build WASM code.
+#
+# This is admittedly setup before good WASM tooling and hopefully 
+# can be upgraded as time goes on.
+###
+
+docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) \
+  emscripten/emsdk emcc src/xor_builder.c \
+  -O3 \
+  -s WASM=1 \
+  -o _build/simplelunr.js
