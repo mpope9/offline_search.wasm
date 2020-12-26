@@ -8,9 +8,10 @@
 #include "porter_stemmer.h"
 #include "xorfilter.h"
 #include "utils.h"
+#include "smaz.h"
 
 #ifdef NODERAWFS
-#define CWD "_build/filters/"
+#define CWD "_build/"
 #else
 #define CWD "/working/"
 #endif
@@ -26,7 +27,7 @@ extern "C" {
  * Performs stop word filtering and stemming on the input strings.
  */
 EMSCRIPTEN_KEEPALIVE 
-bool build_xor(char* input, int length, char* file_name)
+bool build_xor(char* input, char* url)
 {
    xor8_t filter;
    FILE* write_ptr;
@@ -62,10 +63,10 @@ bool build_xor(char* input, int length, char* file_name)
 
    // Mount node FS.
 #ifndef NODERAWFS
-   printf("Node fs detected.\n");
+   printf("Node fs detected, mounting '_build' directory.\n");
    EM_ASM(
       FS.mkdir('/working');
-      FS.mount(NODEFS, { root: './_build/filters/' }, '/working');
+      FS.mount(NODEFS, { root: './_build/' }, '/working');
    );
 #endif
 
@@ -78,18 +79,26 @@ bool build_xor(char* input, int length, char* file_name)
       return false;
    }
 
-   // Serialize filter to file.
+   // Serialize url and filter to file.
    uint64_t seed = filter.seed;
    uint64_t block_length = filter.blockLength;
 
-   // TODO: use passed file name.
-   write_ptr = fopen(CWD "test_file.bin", "wb");
+   write_ptr = fopen(CWD "filters", "a");
 
    if(!write_ptr)
    {
       printf("unable to open file\n");
       return false;
    }
+
+   // Compress url using smaz.
+   int url_size = strlen(url);
+   char compressed[4096];
+   smaz_compress(url, url_size, compressed, sizeof(compressed));
+   int compressed_size = strlen(compressed);
+
+   fwrite(&compressed_size, sizeof(compressed_size), 1, write_ptr);
+   fwrite(&compressed, sizeof(char) * compressed_size, 1, write_ptr);
 
    fwrite(&seed, sizeof(seed), 1, write_ptr);
    fwrite(&block_length, sizeof(block_length), 1, write_ptr);

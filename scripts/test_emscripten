@@ -14,5 +14,3 @@ docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
     -s EXPORTED_FUNCTIONS="['_malloc', '_free']" \
     -lnodefs.js \
     -o _build/xor_builder.js
-
-mkdir -p _build/filters/

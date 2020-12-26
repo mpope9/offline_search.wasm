@@ -5,6 +5,8 @@ This library is a WIP, and not all features present in this README are implement
 
 This is a library to generate Webassembly bindings for a full-text search index backed by [xor_filters](https://github.com/FastFilter/xor_singleheader). It is a bastardazation of concepts Tinysearch & lunr.js, and it strives to strike a balance between the highest level of size efficiency, performance, and features.
 
+An article of ~550 words can be compressed to ~100Kb.
+
 ## Features
 * Slim size through [Webassembly](https://webassembly.org/).
 * [Stemming](https://en.wikipedia.org/wiki/Stemming).
@@ -17,27 +19,26 @@ Here we compare lunr.wasm to both [elasticlunr.js](https://github.com/weixsong/e
 
 In comparision to `elasticlunr.js`:
 1) Smaller and more efficient.
-  * TODO: metrics.
-  * elasticlunr.js ships indexes as a list of strings.
-  * offline-search.wasm ships indexes as a [xor_filter](https://github.com/FastFilter/xor_singleheader), wihch are more space efficient.
+   * elasticlunr.js ships indexes as a list of strings.
+   * offline-search.wasm ships indexes as a [xor_filter](https://github.com/FastFilter/xor_singleheader), wihch are more space efficient.
 2) Does not support languages outside of English.
-  * Yet.
-3) Support for [stemming](https://en.wikipedia.org/wiki/Stemming)!
-  * elasticlunr.js uses a [Javascript stemmer](https://github.com/weixsong/elasticlunr.js/blob/master/lib/stemmer.js) based off of the [PorterStemmer](https://tartarus.org/martin/PorterStemmer/index.html).
-  * offline-search.wasm compiles the [C version of PorterStemmer](https://tartarus.org/martin/PorterStemmer/c.txt) into the WASM. It results in a smaller, optimized binary.
+   * Yet. Stemming and tokenization algorithms in C are welcome for other languages.
+3) Support for [stemming](https://en.wikipedia.org/wiki/Stemming).
+   * elasticlunr.js uses a [Javascript stemmer](https://github.com/weixsong/elasticlunr.js/blob/master/lib/stemmer.js) based off of the [PorterStemmer](https://tartarus.org/martin/PorterStemmer/index.html).
+   * offline-search.wasm compiles the [C version of PorterStemmer](https://tartarus.org/martin/PorterStemmer/c.txt) into the WASM. It results in a smaller, optimized binary.
 4) No support for Query-Time Boosting.
-  * I have no intention of implementing this feature, however I am open to a pull request if it is mostly in C code :)
+   * I have no intention of implementing this feature, however I am open to a pull request if it is mostly in C code :)
 
 In comparision to `Tinysearch`:
 1) Written in C.
-  * Tinysearch is written in rust, and requires Cargo for installation.
-  * offline-search.wasm is written mostly in C and Javascript, and only relies on Node.js to be installed.
-  * I believe this is more 'familiar' to those in the web world.
-2) Smaller
-  * Tinysearch utilizes [Bloom Filters]() to create indexes.
-  * offline-search.wasm utilizes [xor_filters]() to create indexes. These are smaller in size than Bloom Filters, and have a smaller false positive rate.
+   * Tinysearch is written in rust, and requires Cargo for installation.
+   * offline-search.wasm is written mostly in C and Javascript, and only relies on Node.js to be installed.
+   * I believe this is more 'familiar' to those in the web world.
+2) Smaller index size.
+   * Tinysearch utilizes [Bloom Filters](https://en.wikipedia.org/wiki/Bloom_filter) to create indexes.
+   * offline-search.wasm utilizes [xor_filters](https://github.com/FastFilter/xor_singleheader) to create indexes. These are smaller in size than Bloom Filters, and have a smaller false positive rate.
 3) More features
-  * Stemming through the PorterStemmer.
+   * Stemming through the PorterStemmer.
   * [Stop word](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html) filtering, which should result in even smaller binaries.
 
 # TODOs
