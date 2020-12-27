@@ -7,14 +7,16 @@ This is a library to generate Webassembly bindings for a full-text search index 
 
 An article of ~550 words can be compressed to ~97K. This is up to a 147% size decrease from Tinysearch on a per-article basis..
 
-## Features
+I apologize for the excessive use of emojis, but the README seemed a bit bland without them.
+
+## Features :sparkles:
 * Slim size through [Webassembly](https://webassembly.org/).
 * [Stemming](https://en.wikipedia.org/wiki/Stemming).
 * [Stop word filtering](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html).
 * Docker and non-docker based index building.
 * Input from JSON or directly from HTML.
 
-## Implementation Comparisons
+## Implementation Comparisons :bulb:
 Here we compare lunr.wasm to both [elasticlunr.js](https://github.com/weixsong/elasticlunr.js) and [Tinysearch](https://github.com/tinysearch/tinysearch). These libraries are very high quality, and their work is greatly appreciated.
 
 In comparision to `elasticlunr.js`:
@@ -50,8 +52,9 @@ The combination of stemming and stop word filtering ultimately end up creating a
   * "mode" configuration option.
 * Ship separate vanilla JS files for browser.
 * Test suite?
+* Fix bug with tokenization that prevents stemming on some words.
 
-## Usage & Configuration
+## Usage & Configuration :zap:
 
 Docker or Podman needs to be installed to build the binaries. This ensures the highest level of compatibility for building the Webassembly code, in the most contained way. However, if this is a limiting factor, the build scripts are located in `scripts/`.
 
@@ -97,7 +100,7 @@ This will build the WebAssembly and JS glue code to `_build/output/` and the fil
 ```javascript
 ```
 
-## Architecture
+## Architecture :rocket:
 
 ### Producer
 The first part to the library is the Producer. This is a NodeJS + WebAssembly module that takes the input JSON, and transforms it into a xor_filter binaries. It tokenizes and applies stemming to the input, distills them down to hashes, then writes the files to the local file system defined in the configuration chunk. This is just for transformation, and will not be used by the browser.
