@@ -5,7 +5,7 @@ This library is a WIP, and not all features present in this README are implement
 
 This is a library to generate Webassembly bindings for a full-text search index backed by [xor_filters](https://github.com/FastFilter/xor_singleheader). It is a bastardazation of concepts Tinysearch & lunr.js, and it strives to strike a balance between the highest level of size efficiency, performance, and features.
 
-An article of ~550 words can be compressed to ~100Kb.
+An article of ~550 words can be compressed to ~97K. This is up to a 147% size decrease from Tinysearch on a per-article basis..
 
 ## Features
 * Slim size through [Webassembly](https://webassembly.org/).
@@ -31,15 +31,18 @@ In comparision to `elasticlunr.js`:
 
 In comparision to `Tinysearch`:
 1) Written in C.
-   * Tinysearch is written in rust, and requires Cargo for installation.
-   * offline-search.wasm is written mostly in C and Javascript, and only relies on Node.js to be installed.
+   * Tinysearch is written in rust, and requires Cargo and a rather large toolchain for installation.
+   * offline-search.wasm is written mostly in C and Javascript, and only relies on Node.js with few dependencies to build the index, and uses vanilla Javascript for the browser.
    * I believe this is more 'familiar' to those in the web world.
 2) Smaller index size.
    * Tinysearch utilizes [Bloom Filters](https://en.wikipedia.org/wiki/Bloom_filter) to create indexes.
    * offline-search.wasm utilizes [xor_filters](https://github.com/FastFilter/xor_singleheader) to create indexes. These are smaller in size than Bloom Filters, and have a smaller false positive rate.
 3) More features
    * Stemming through the PorterStemmer.
-  * [Stop word](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html) filtering, which should result in even smaller binaries.
+   * Stop word filtering.
+   * Mapped URL compression.
+
+The combination of stemming and stop word filtering ultimately end up creating a smaller binary. Removing non-critial words and reducing prefixes and suffixes allows for more overlap in overall words. this in turn allows for a smaller library.
 
 # TODOs
 * Non docker builds (pass cmd args to npm build)
