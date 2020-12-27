@@ -10,7 +10,16 @@ docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
     -O0 \
     -Wall \
     -s MODULARIZE=1 \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS="['ccall', 'intArrayFromString', 'allocate', 'ALLOC_NORMAL']" \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['intArrayFromString', 'allocate', 'ALLOC_NORMAL']" \
     -s EXPORTED_FUNCTIONS="['_malloc', '_free']" \
     -lnodefs.js \
-    -o _build/xor_builder.js
+    -o build/xor_builder.js
+
+docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
+    src/offline_search_wasm.c \
+    -s WASM=1 \
+    -O0 \
+    -Wall \
+    -s MODULARIZE=1 \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['intArrayFromString', 'allocate', 'ALLOC_NORMAL']" \
+    -o build/offline_search_wasm.js

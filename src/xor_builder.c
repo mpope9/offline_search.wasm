@@ -11,7 +11,7 @@
 #include "smaz.h"
 
 #ifdef NODERAWFS
-#define CWD "_build/"
+#define CWD "build/"
 #else
 #define CWD "/working/"
 #endif
@@ -63,10 +63,10 @@ bool build_xor(char* input, char* url)
 
    // Mount node FS.
 #ifndef NODERAWFS
-   printf("Node fs detected, mounting '_build' directory.\n");
+   printf("Node fs detected, mounting 'build' directory.\n");
    EM_ASM(
       FS.mkdir('/working');
-      FS.mount(NODEFS, { root: './_build/' }, '/working');
+      FS.mount(NODEFS, { root: './build/' }, '/working');
    );
 #endif
 
@@ -94,8 +94,7 @@ bool build_xor(char* input, char* url)
    // Compress url using smaz.
    int url_size = strlen(url);
    char compressed[4096];
-   smaz_compress(url, url_size, compressed, sizeof(compressed));
-   int compressed_size = strlen(compressed);
+   int compressed_size = smaz_compress(url, url_size, compressed, sizeof(compressed));
 
    fwrite(&compressed_size, sizeof(compressed_size), 1, write_ptr);
    fwrite(&compressed, sizeof(char) * compressed_size, 1, write_ptr);
@@ -110,14 +109,6 @@ bool build_xor(char* input, char* url)
 
    return true;
 }
-
-/*
-EMSCRIPTEN_KEEPALIVE 
-bool xor_contains(xor8_t* filter, uint8_t input)
-{
-   return xor8_contain((uint64_t) input, filter);
-}
-*/
 
 #ifdef __cplusplus
 }

@@ -1,145 +1,28 @@
 /**
- * Utils!
+ * utils.h
+ *
+ * Shared utilities between the xor_builder and indexing code.
  */
+
+#ifndef UTILS_H
+#define UTILS_H
+
 #include <ctype.h>
 #include <string.h>
 #include <stdio.h>
 #include <inttypes.h>
 
+#include "stop_words.h"
+
 #define INITIAL_TOKENS_SIZE 256
 
-const char* STOP_WORD_CORPUS[] =
-{
-   "",
-   "i",
-   "me",
-   "my",
-   "myself",
-   "we",
-   "our",
-   "ours",
-   "ourselves",
-   "you",
-   "your",
-   "yours",
-   "yourself",
-   "yourselves",
-   "he",
-   "him",
-   "his",
-   "himself",
-   "she",
-   "her",
-   "hers",
-   "herself",
-   "it",
-   "its",
-   "itself",
-   "they",
-   "them",
-   "their",
-   "theirs",
-   "themselves",
-   "what",
-   "which",
-   "who",
-   "whom",
-   "this",
-   "that",
-   "these",
-   "those",
-   "am",
-   "is",
-   "are",
-   "was",
-   "were",
-   "be",
-   "been",
-   "being",
-   "have",
-   "has",
-   "had",
-   "having",
-   "do",
-   "does",
-   "did",
-   "doing",
-   "a",
-   "an",
-   "the",
-   "and",
-   "but",
-   "if",
-   "or",
-   "because",
-   "as",
-   "until",
-   "while",
-   "of",
-   "at",
-   "by",
-   "for",
-   "with",
-   "about",
-   "against",
-   "between",
-   "into",
-   "through",
-   "during",
-   "before",
-   "after",
-   "above",
-   "below",
-   "to",
-   "from",
-   "up",
-   "down",
-   "in",
-   "out",
-   "on",
-   "off",
-   "over",
-   "under",
-   "again",
-   "further",
-   "then",
-   "once",
-   "here",
-   "there",
-   "when",
-   "where",
-   "why",
-   "how",
-   "all",
-   "any",
-   "both",
-   "each",
-   "few",
-   "more",
-   "most",
-   "other",
-   "some",
-   "such",
-   "no",
-   "nor",
-   "not",
-   "only",
-   "own",
-   "same",
-   "so",
-   "than",
-   "too",
-   "very",
-   "can",
-   "will",
-   "just",
-   "should",
-   "now"
-};
 
+/**
+ * Tests if a word is a 'stop word'.
+ */
 bool is_stop_word(char* word)
 {
-   for(int i = 0; i < 126; i++)
+   for(int i = 0; i < STOPWORD_LENGTH; i++)
    {
       if(strcmp(word, STOP_WORD_CORPUS[i]) == 0)
       {
@@ -178,7 +61,7 @@ void clean_token(char* token)
 
 /**
  * Suboptimal tokenization. Okay for building the index, good enough for limited search input.
- * Breaks strings into tokens, cleans the tokens, checks if it is a stop word, then adds
+ * Breaks strings into sanitized tokens, checks if it is a stop word, then adds
  * to the token output.
  */
 void tokenize(char* input, char*** tokens_input, int* tokens_length)
@@ -234,6 +117,9 @@ uint64_t hash_token(char* str)
    return hash;
 }
 
+/**
+ * Function for Quicksort.
+ */
 int comp_fun(const void* a, const void* b)
 {
    uint64_t i1 = *(uint64_t*) a;
@@ -266,3 +152,5 @@ void deduplicate_array(uint64_t* input, int length, int* new_length_input)
 
    *new_length_input = new_length;
 }
+
+#endif
