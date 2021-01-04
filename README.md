@@ -20,12 +20,12 @@ This will run the provided Node.js script in `lib/filter_builder.js`. If using N
 
 The WASM, example Javascript code, and example HTML script will be generated to the `build/` directory. You can copy that into your site for usage. It includes minified versions of the Javascript code, which should be suited for production. Be sure to copy the `offline_search_wasm.data` file into the same directory as the `offline_search_wasm.js` file. This contains the search index.
 
-The example Javascript code provided in `offline_filter.js` should be enough for production. However, it is also a good starting point if a more advanced implementation is needed.
+The example Javascript code provided in `offline_search.js` should be enough for production. However, it is also a good starting point if a more advanced implementation is needed.
 
 Alternativly, the script in `scripts/build` can be used. This will not call `terser`.
 
 ## Implementation Comparisons :bulb:
-Here we compare offline_filter.wasm to both [elasticlunr.js](https://github.com/weixsong/elasticlunr.js) and [Tinysearch](https://github.com/tinysearch/tinysearch). These libraries are very high quality, and their work is greatly appreciated.
+Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.com/weixsong/elasticlunr.js) and [Tinysearch](https://github.com/tinysearch/tinysearch). These libraries are very high quality, and their work is greatly appreciated.
 
 #### In comparision to `elasticlunr.js`:
 1) Smaller and more efficient.
@@ -42,7 +42,7 @@ Here we compare offline_filter.wasm to both [elasticlunr.js](https://github.com/
 1) Written in C.
    * Tinysearch is written in Rust, and requires Cargo and a rather large toolchain for installation.
    * offline_search.wasm is written mostly in C and Javascript, and the example implementation relies on Node.js to build the index.
-   * I believe this is more 'familiar' to those in the web world.
+   * Using Javascript should be more familiar to those in the web world, and C is a simpler language.
 2) Smaller index size.
    * Tinysearch utilizes [Bloom Filters](https://en.wikipedia.org/wiki/Bloom_filter) to create indexes.
    * offline_search.wasm utilizes [xor_filters](https://github.com/FastFilter/xor_singleheader) to create indexes. These are smaller in size than Bloom Filters, and have a smaller false positive rate.

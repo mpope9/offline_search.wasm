@@ -49,7 +49,7 @@ rm build/xor_builder.wasm
 rm build/filters
 
 # Copy filter to build folder.
-cp lib/offline_filter.js build/
+cp lib/offline_search.js build/
 cp test/index.html build/
 
 # Minify ouput
