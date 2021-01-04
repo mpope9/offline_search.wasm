@@ -1,6 +1,5 @@
 # offline-search.wasm
 
-### Warning
 This is a library to generate Webassembly bindings for a full-text search index backed by [xor_filters](https://github.com/FastFilter/xor_singleheader). It is heavily inspired by Tinysearch & lunr.js. This library strives to strike a balance between the highest level of size efficiency, performance, and features.
 
 ## Features :sparkles:
