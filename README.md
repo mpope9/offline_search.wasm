@@ -47,8 +47,9 @@ Here we compare offline_filter.wasm to both [elasticlunr.js](https://github.com/
    * Tinysearch utilizes [Bloom Filters](https://en.wikipedia.org/wiki/Bloom_filter) to create indexes.
    * offline_search.wasm utilizes [xor_filters](https://github.com/FastFilter/xor_singleheader) to create indexes. These are smaller in size than Bloom Filters, and have a smaller false positive rate.
 3) More features
-   * Stemming.
+   * Full-Text Search through Stemming.
    * Stop word filtering.
+   * [smaz](https://github.com/antirez/smaz) compression on mapped strings.
 
 ## 'Architecture' :rocket:
 
