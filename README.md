@@ -111,7 +111,7 @@ int initiate_search(char* input, int* output_array)
 void finalize_search(int* urls_index, char* output_array)
 ```
 
-```
+```c
 /**
  * free_index
  *
