@@ -1,14 +1,57 @@
 #!/bin/bash
 
 ###
-# Script to build WASM code.
-#
-# This is admittedly setup before good WASM tooling and hopefully 
-# can be upgraded as time goes on.
+# Script to build filter, and copy example files to build/ directory.
+# Remove intermediate files to prevent confusion.
 ###
 
-docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) \
-  emscripten/emsdk emcc src/xor_builder.c \
-  -O3 \
-  -s WASM=1 \
-  -o _build/simplelunr.js
+rm build/*
+
+echo "--> Building FilterBuilder wasm module."
+
+# Optimize with O2 here, becuase it is only for building the index
+# and doesn't need to be _crazy_ optimized.
+docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
+    src/xor_builder.c \
+    -s WASM=1 \
+    -O2 \
+    -Wall \
+    -s MODULARIZE=1 \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['intArrayFromString', 'allocate', 'ALLOC_NORMAL']" \
+    -s EXPORTED_FUNCTIONS="['_malloc', '_free']" \
+    -lnodefs.js \
+    -o build/xor_builder.js
+
+echo "--> Running FilterBuilder test, and generating test filter."
+
+./node_modules/mocha/bin/mocha --grep "FilterBuilder"
+
+echo "--> Building offline search modules."
+
+# Full _size_ optimizations here.
+docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
+    src/offline_search_wasm.c \
+    -s WASM=1 \
+    -Oz \
+    -Wall \
+    -s MODULARIZE=1 \
+    --closure 1 \
+    -fno-rtti \
+    -fno-exceptions \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['intArrayFromString', 'allocate', 'ALLOC_NORMAL', 'getValue']" \
+    -s EXPORTED_FUNCTIONS="['_malloc', '_free']" \
+    --preload-file build/filters \
+    -o build/offline_search_wasm.js
+
+# Remove intermediate build files.
+rm build/xor_builder.js
+rm build/xor_builder.wasm
+rm build/filters
+
+# Copy filter to build folder.
+cp lib/offline_filter.js build/
+cp test/index.html build/
+
+# Minify ouput
+./node_modules/terser/bin/terser build/offline_filter.js -c -o build/offline_filter.min.js
+./node_modules/terser/bin/terser build/offline_search_wasm.js -c -o build/offline_search_wasm.min.js

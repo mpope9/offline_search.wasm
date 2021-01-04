@@ -1,0 +1,20 @@
+<html>
+
+<head>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+</head>
+
+<body>
+  <script type="text/javascript" src="offline_search_wasm.js"></script>
+  <script type="module">
+    import { OfflineSearch } from './offline_filter.js';
+
+    var offlineSearch = new OfflineSearch(Module());
+    offlineSearch.init();
+
+    offlineSearch.search('endpoint');
+
+    offlineSearch.free();
+
+  </script>
+</body>

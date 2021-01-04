@@ -13,15 +13,20 @@
 #include <inttypes.h>
 
 #include "stop_words.h"
+#include "porter_stemmer.h"
 
 #define INITIAL_TOKENS_SIZE 256
-
+#define STRTOK_SEPERATORS " \n\r\t;&.,:"
 
 /**
  * Tests if a word is a 'stop word'.
  */
 bool is_stop_word(char* word)
 {
+   if(strlen(word) < 4)
+   {
+      return true;
+   }
    for(int i = 0; i < STOPWORD_LENGTH; i++)
    {
       if(strcmp(word, STOP_WORD_CORPUS[i]) == 0)
@@ -70,13 +75,13 @@ void tokenize(char* input, char*** tokens_input, int* tokens_length)
    int length = 0;
    char** tokens = (char**) malloc(max_length * sizeof(char*));
 
-   char* current_substr = strtok(input, " \n\r\t");
+   char* current_substr = strtok(input, STRTOK_SEPERATORS);
 
    while(current_substr != NULL)
    {
       size_t current_substr_len = strlen(current_substr);
       char* curr = (char*) malloc(current_substr_len * sizeof(char));
-      strncat(curr, current_substr, current_substr_len);
+      snprintf(curr, current_substr_len + 1, "%s", current_substr);
 
       clean_token(curr);
 
@@ -85,13 +90,12 @@ void tokenize(char* input, char*** tokens_input, int* tokens_length)
          tokens[length] = curr;
          length++;
       }
-      current_substr = strtok(NULL, " \n\r\t");
+      current_substr = strtok(NULL, STRTOK_SEPERATORS);
 
       // Need more memory.
       if(length == max_length)
       {
          max_length *= 2;
-         // TODO: Should check for realloc error.
          tokens = (char**) realloc(tokens, max_length * sizeof(char*));
       }
    }
@@ -100,57 +104,49 @@ void tokenize(char* input, char*** tokens_input, int* tokens_length)
    *tokens_input = tokens;
 }
 
-
 /**
- * djb2 hashing.
+ * (Once upon a)
+ * Jenkins One At a Time Hash
  */
 uint64_t hash_token(char* str)
 {
-   uint64_t hash = 5381;
-   int c;
-
-   while((c = *str++))
+   uint64_t hash, i;
+   for(hash = i = 0; i < strlen(str); ++i)
    {
-      hash = ((hash << 5) + hash) + c; /* hash * 33 + c */
+      hash += str[i];
+      hash += (hash << 10);
+      hash ^= (hash >> 6);
    }
-
+   hash += (hash << 3);
+   hash ^= (hash >> 11);
+   hash += (hash << 15);
    return hash;
 }
 
 /**
- * Function for Quicksort.
+ * Combined stemming, and hashing.
  */
-int comp_fun(const void* a, const void* b)
+void stem_n_hash(char** tokens, int tokens_length, uint64_t* hashes, int* hashes_length_out)
 {
-   uint64_t i1 = *(uint64_t*) a;
-   uint64_t i2 = *(uint64_t*) b;
 
-   if(i1 < i2) return -1;
-   else if (i1 == i2) return 0;
-   else return 1;
-}
-
-/**
- * Quicksorts array, then iterates over to remove duplicates.
- */
-void deduplicate_array(uint64_t* input, int length, int* new_length_input)
-{
-   qsort(input, length, sizeof(uint64_t), comp_fun);
-
-   int new_length = 0;
-   int i = 0;
-   uint64_t prev_element = input[i];
-   for(i = 1; i < length; ++i)
+   int hashes_length = 0;
+   for(int i = 0; i < tokens_length; i++)
    {
-      if(input[i] != prev_element)
+      char* token = tokens[i];
+      int token_length = strlen(token);
+      
+      // Stemming, modifies string in-place, and needs null termination.
+      int new_length = stem(token, 0, token_length - 1);
+      if(new_length < token_length)
       {
-         input[new_length] = input[i];
-         new_length++;
+         token[new_length + 1] = '\0';
       }
-      prev_element = input[i];
+
+      hashes[hashes_length] = hash_token(token);
+      hashes_length++;
    }
 
-   *new_length_input = new_length;
+   *hashes_length_out = hashes_length;
 }
 
 #endif

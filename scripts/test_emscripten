@@ -1,8 +1,17 @@
 #!/bin/bash
 
-## Script to build wasm with test setting enabled.
-## Output WASM, disable optimizations, compile with warnings, modularize for Node,
-## ouput required built-in functions, and output to the `_build` directory.
+###
+# Script to build wasm with test setting enabled.
+#
+# Steps:
+# 1) Output WASM without optimizations.
+# 2) Run mocha tests to build an index.
+# 3) Run mocha tests to query index.
+###
+
+rm build/*
+
+echo "--> Building FilterBuilder wasm module."
 
 docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
     src/xor_builder.c \
@@ -15,11 +24,26 @@ docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
     -lnodefs.js \
     -o build/xor_builder.js
 
+echo "--> Running FilterBuilder test, and generating test filter."
+
+./node_modules/mocha/bin/mocha --grep "FilterBuilder"
+
+echo "--> Building offline search modules."
+
 docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
     src/offline_search_wasm.c \
     -s WASM=1 \
     -O0 \
     -Wall \
     -s MODULARIZE=1 \
-    -s EXTRA_EXPORTED_RUNTIME_METHODS="['intArrayFromString', 'allocate', 'ALLOC_NORMAL']" \
+    --closure 1 \
+    --profiling \
+    --profiling-funcs \
+    --memoryprofiler \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['intArrayFromString', 'allocate', 'ALLOC_NORMAL', 'getValue']" \
+    --preload-file build/filters \
     -o build/offline_search_wasm.js
+
+# Copy filter to build folder.
+cp lib/offline_filter.js build/
+cp test/index.html build/

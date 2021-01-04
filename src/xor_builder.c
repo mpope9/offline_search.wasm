@@ -5,7 +5,6 @@
 #include <string.h>
 #include <emscripten/emscripten.h>
 
-#include "porter_stemmer.h"
 #include "xorfilter.h"
 #include "utils.h"
 #include "smaz.h"
@@ -19,6 +18,44 @@
 #ifdef __cplusplus
 extern "C" {
 #endif
+
+bool fileSystemMounted = false;
+
+/**
+ * Function for Quicksort.
+ */
+int comp_fun(const void* a, const void* b)
+{
+   uint64_t i1 = *(uint64_t*) a;
+   uint64_t i2 = *(uint64_t*) b;
+
+   if(i1 < i2) return -1;
+   else if (i1 == i2) return 0;
+   else return 1;
+}
+
+/**
+ * Quicksorts array, then iterates over to remove duplicates.
+ */
+void deduplicate_array(uint64_t* input, int length, int* new_length_input)
+{
+   qsort(input, length, sizeof(uint64_t), comp_fun);
+
+   int new_length = 0;
+   int i = 0;
+   uint64_t prev_element = input[i];
+   for(i = 1; i < length; ++i)
+   {
+      if(input[i] != prev_element)
+      {
+         input[new_length] = input[i];
+         new_length++;
+      }
+      prev_element = input[i];
+   }
+
+   *new_length_input = new_length;
+}
 
 /**
  * build_xor
@@ -42,32 +79,21 @@ bool build_xor(char* input, char* url)
    int hashes_length = 0;
 
    // Stemming, hashing.
-   for(int i = 0; i < tokens_length; i++)
-   {
-      char* token = tokens[i];
-      int token_length = strlen(token);
-      
-      // Stemming, modifies string in-place, and needs null termination.
-      int new_length = stem(token, 0, token_length - 1);
-      if(new_length < token_length)
-      {
-         token[new_length + 1] = '\0';
-      }
-
-      hashes[hashes_length] = hash_token(token);
-      hashes_length++;
-   }
+   stem_n_hash(tokens, tokens_length, hashes, &hashes_length);
 
    int deduped_hashes_length = 0;
    deduplicate_array(hashes, hashes_length, &deduped_hashes_length);
 
-   // Mount node FS.
 #ifndef NODERAWFS
-   printf("Node fs detected, mounting 'build' directory.\n");
-   EM_ASM(
-      FS.mkdir('/working');
-      FS.mount(NODEFS, { root: './build/' }, '/working');
-   );
+   if(!fileSystemMounted)
+   {
+      printf("Node fs detected, mounting 'build' directory.\n");
+      EM_ASM(
+         FS.mkdir('/working');
+         FS.mount(NODEFS, { root: './build/' }, '/working');
+      );
+      fileSystemMounted = true;
+   }
 #endif
 
    // Allocate and populate filter.
@@ -94,7 +120,7 @@ bool build_xor(char* input, char* url)
    // Compress url using smaz.
    int url_size = strlen(url);
    char compressed[4096];
-   int compressed_size = smaz_compress(url, url_size, compressed, sizeof(compressed));
+   uint8_t compressed_size = smaz_compress(url, url_size, compressed, sizeof(compressed));
 
    fwrite(&compressed_size, sizeof(compressed_size), 1, write_ptr);
    fwrite(&compressed, sizeof(char) * compressed_size, 1, write_ptr);
