@@ -20,7 +20,7 @@
   "scripts": {
     "test:emscripten": "./scripts/test_emscripten",
     "test": "npm run test:emscripten",
-    "build_index": "npm run test:emscripten && node --experimental-wasm-modules lib/filter_builder.js"
+    "build": "./scripts/build && ./node_modules/terser/bin/terser build/offline_filter.js -c -o build/offline_filter.min.js && ./node_modules/terser/bin/terser build/offline_search_wasm.js -c -o build/offline_search_wasm.min.js"
   },
   "devDependencies": {
     "mocha": "^8.2.1",

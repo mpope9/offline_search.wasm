@@ -53,5 +53,3 @@ cp lib/offline_filter.js build/
 cp test/index.html build/
 
 # Minify ouput
-./node_modules/terser/bin/terser build/offline_filter.js -c -o build/offline_filter.min.js
-./node_modules/terser/bin/terser build/offline_search_wasm.js -c -o build/offline_search_wasm.min.js
