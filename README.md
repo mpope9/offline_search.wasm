@@ -1,4 +1,4 @@
-# offline-search.wasm
+# offline_search.wasm
 
 This is a library to generate Webassembly bindings for a full-text search index backed by [xor_filters](https://github.com/FastFilter/xor_singleheader). It is heavily inspired by Tinysearch & lunr.js. This library strives to strike a balance between the highest level of size efficiency, performance, and features.
 
@@ -30,22 +30,22 @@ Here we compare offline_filter.wasm to both [elasticlunr.js](https://github.com/
 In comparision to `elasticlunr.js`:
 1) Smaller and more efficient.
    * elasticlunr.js ships indexes as a list of strings.
-   * offline-search.wasm ships indexes as a [xor_filter](https://github.com/FastFilter/xor_singleheader), wihch are more space efficient.
+   * offline_search.wasm ships indexes as a [xor_filter](https://github.com/FastFilter/xor_singleheader), wihch are more space efficient.
 2) Does not support languages outside of English.
    * Yet. Stemming and tokenization algorithms in C are welcome for other languages.
 3) Support for [stemming](https://en.wikipedia.org/wiki/Stemming).
    * elasticlunr.js uses a [Javascript stemmer](https://github.com/weixsong/elasticlunr.js/blob/master/lib/stemmer.js) based off of the [PorterStemmer](https://tartarus.org/martin/PorterStemmer/index.html).
-   * offline-search.wasm compiles the [C version of PorterStemmer](https://tartarus.org/martin/PorterStemmer/c.txt) into the WASM. It results in a smaller, optimized binary.
+   * offline_search.wasm compiles the [C version of PorterStemmer](https://tartarus.org/martin/PorterStemmer/c.txt) into the WASM. It results in a smaller, optimized binary.
 4) No support for Query-Time Boosting.
 
 In comparision to `Tinysearch`:
 1) Written in C.
    * Tinysearch is written in Rust, and requires Cargo and a rather large toolchain for installation.
-   * offline-search.wasm is written mostly in C and Javascript, and the example implementation relies on Node.js to build the index.
+   * offline_search.wasm is written mostly in C and Javascript, and the example implementation relies on Node.js to build the index.
    * I believe this is more 'familiar' to those in the web world.
 2) Smaller index size.
    * Tinysearch utilizes [Bloom Filters](https://en.wikipedia.org/wiki/Bloom_filter) to create indexes.
-   * offline-search.wasm utilizes [xor_filters](https://github.com/FastFilter/xor_singleheader) to create indexes. These are smaller in size than Bloom Filters, and have a smaller false positive rate.
+   * offline_search.wasm utilizes [xor_filters](https://github.com/FastFilter/xor_singleheader) to create indexes. These are smaller in size than Bloom Filters, and have a smaller false positive rate.
 3) More features
    * Stemming.
    * Stop word filtering.
