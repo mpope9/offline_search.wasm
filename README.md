@@ -27,7 +27,7 @@ Alternativly, the script in `scripts/build` can be used. This will not call `ter
 ## Implementation Comparisons :bulb:
 Here we compare offline_filter.wasm to both [elasticlunr.js](https://github.com/weixsong/elasticlunr.js) and [Tinysearch](https://github.com/tinysearch/tinysearch). These libraries are very high quality, and their work is greatly appreciated.
 
-In comparision to `elasticlunr.js`:
+#### In comparision to `elasticlunr.js`:
 1) Smaller and more efficient.
    * elasticlunr.js ships indexes as a list of strings.
    * offline_search.wasm ships indexes as a [xor_filter](https://github.com/FastFilter/xor_singleheader), wihch are more space efficient.
@@ -38,7 +38,7 @@ In comparision to `elasticlunr.js`:
    * offline_search.wasm compiles the [C version of PorterStemmer](https://tartarus.org/martin/PorterStemmer/c.txt) into the WASM. It results in a smaller, optimized binary.
 4) No support for Query-Time Boosting.
 
-In comparision to `Tinysearch`:
+#### In comparision to `Tinysearch`:
 1) Written in C.
    * Tinysearch is written in Rust, and requires Cargo and a rather large toolchain for installation.
    * offline_search.wasm is written mostly in C and Javascript, and the example implementation relies on Node.js to build the index.
