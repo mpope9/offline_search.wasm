@@ -24,7 +24,7 @@ The WASM, example Javascript code, and example HTML script will be generated to 
 
 The example Javascript code provided in `offline_search.js` should be enough for production. However, it is also a good starting point if a more advanced implementation is needed.
 
-Alternativly, the script in `scripts/build` can be used. This will not call (`terser`)[https://github.com/terser/terser].
+Alternativly, the script in `scripts/build` can be used. This will not call [`terser`](https://github.com/terser/terser).
 
 ## Implementation Comparisons :bulb:
 Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.com/weixsong/elasticlunr.js) and [Tinysearch](https://github.com/tinysearch/tinysearch). These libraries are very high quality, and their work is greatly appreciated.
