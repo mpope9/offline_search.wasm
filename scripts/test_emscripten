@@ -1,4 +1,6 @@
 #!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
 
 ###
 # Script to build wasm with test setting enabled.
@@ -26,7 +28,7 @@ docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
 
 echo "--> Running FilterBuilder test, and generating test filter."
 
-./node_modules/mocha/bin/mocha --grep "FilterBuilder"
+./node_modules/mocha/bin/mocha test/test_builder.js --grep "FilterBuilder"
 
 echo "--> Building offline search modules."
 
@@ -36,14 +38,9 @@ docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
     -O0 \
     -Wall \
     -s MODULARIZE=1 \
-    --closure 1 \
-    --profiling \
-    --profiling-funcs \
-    --memoryprofiler \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['intArrayFromString', 'allocate', 'ALLOC_NORMAL', 'getValue']" \
     --preload-file build/filters \
     -o build/offline_search_wasm.js
 
-# Copy filter to build folder.
+# Copy js search code to build folder.
 cp lib/offline_search.js build/
-cp test/index.html build/

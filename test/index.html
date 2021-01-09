@@ -12,7 +12,8 @@
     var offlineSearch = new OfflineSearch(Module());
     offlineSearch.init();
 
-    offlineSearch.search('endpoint');
+    var result = offlineSearch.search('endpoint');
+    console.log(result);
 
     offlineSearch.free();
 
