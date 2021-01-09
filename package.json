@@ -1,5 +1,5 @@
 {
-  "name": "xorlunr",
+  "name": "offline_search.wasm",
   "description": "An extremely lightweight WASM based full-text search engine for offline search, using xor_filters.",
   "version": "0.0.1",
   "author": "Matthew Pope",
@@ -7,22 +7,31 @@
     "search",
     "text retrival",
     "offline search",
-    "full text search"
+    "full text search",
+    "xorfilter"
   ],
-  "homepage": "https://www.github.com/mpope/xorlunr.js",
-  "bugs": "https://github.com/mpope9/xorlunr.js/issues",
-  "main": "lib/xorlunr.js",
+  "homepage": "https://www.github.com/mpope/offline_search.wasm",
+  "bugs": "https://github.com/mpope9/offline_search.wasm/issues",
+  "main": "lib/offline_search.wasm",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/mpope9/xorlunr.js"
+    "url": "https://github.com/mpope9/offline_search.wasm"
   },
   "scripts": {
-    "test:emscripten": "./scripts/test_emscripten",
-    "test": "npm run test:emscripten",
-    "build": "./scripts/build && ./node_modules/terser/bin/terser build/offline_search.js -c -o build/offline_search.min.js && ./node_modules/terser/bin/terser build/offline_search_wasm.js -c -o build/offline_search_wasm.min.js"
+    "test:FilterBuilder": "./scripts/test_emscripten",
+    "test:OfflineSearch": "karma start --single-run --browsers ChromeHeadless karma.conf.js",
+    "test": "npm run test:FilterBuilder && npm run test:OfflineSearch",
+
+    "build:terser": "./node_modules/terser/bin/terser build/offline_search.js -c -o build/offline_search.min.js && ./node_modules/terser/bin/terser build/offline_search_wasm.js -c -o build/offline_search_wasm.min.js",
+    "build": "./scripts/build && npm run build:terser"
   },
   "devDependencies": {
+    "chai": "^4.2.0",
+    "karma": "^5.2.3",
+    "karma-chai": "^0.1.0",
+    "karma-chrome-launcher": "^3.1.0",
+    "karma-mocha": "^2.0.1",
     "mocha": "^8.2.1",
     "terser": "^5.5.1"
   }
