@@ -27,6 +27,32 @@ The example Javascript code provided in `offline_search.js` should be enough for
 
 Alternativly, the script in `scripts/build` can be used. This will not call [`terser`](https://github.com/terser/terser) to minify the Javascript files.
 
+Here is how to use it from HTML:
+```html
+<html>
+
+<head>
+  <meta content="text/html;charset=utf-8" http-equiv="Content-Type" />
+</head>
+
+<body>
+  <script type="text/javascript" src="offline_search_wasm.js"></script>
+  <script type="module">
+    import { OfflineSearch } from './offline_search.js';
+
+    var offlineSearch = new OfflineSearch(Module());
+    offlineSearch.init();
+
+    var result = offlineSearch.search('endpoint');
+    console.log(result);
+
+    offlineSearch.free();
+
+  </script>
+</body>
+```
+
+
 ## :sparkles: Implementation Comparisons
 Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.com/weixsong/elasticlunr.js) and [Tinysearch](https://github.com/tinysearch/tinysearch). These libraries are very high quality, and their work is greatly appreciated.
 
