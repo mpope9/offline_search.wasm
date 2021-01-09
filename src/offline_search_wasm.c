@@ -4,18 +4,13 @@
 #include <string.h>
 #include <emscripten/emscripten.h>
 
-#include "xorfilter.h"
-#include "utils.h"
-#include "smaz.h"
+#include "offline_search_wasm.h"
 
 #ifdef __cplusplus
 extern "C" {
 #endif
 
-#define DEFAULT_OUTPUT_SIZE 32
-#define DEFAULT_URL_SIZE 2048
-
-// Global variable bad.
+// Global variable bad. Move to `offline_search_t`.
 char** urls = NULL;
 int* urls_lengths = NULL;
 xor8_t** indexes = NULL;
