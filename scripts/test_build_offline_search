@@ -1,0 +1,22 @@
+#!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
+
+###
+# Script to build search wasm with test setting enabled.
+###
+
+echo "--> Building offline search modules."
+
+docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
+    src/offline_search_wasm.c \
+    -s WASM=1 \
+    -O0 \
+    -Wall \
+    -s MODULARIZE=1 \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['intArrayFromString', 'allocate', 'ALLOC_NORMAL', 'getValue']" \
+    --preload-file build/filters \
+    -o build/offline_search_wasm.js
+
+# Copy js search code to build folder.
+cp lib/offline_search.js build/

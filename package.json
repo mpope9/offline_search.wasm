@@ -19,12 +19,16 @@
     "url": "https://github.com/mpope9/offline_search.wasm"
   },
   "scripts": {
-    "test:FilterBuilder": "./scripts/test_emscripten",
-    "test:OfflineSearch": "karma start --single-run --browsers ChromeHeadless karma.conf.js",
-    "test": "npm run test:FilterBuilder && npm run test:OfflineSearch",
+    "test": "npm run test:BuildFilterBuilder && npm run test:TestFilterBuilder && npm run test:BuildOfflineSearch && npm run test:TestOfflineSearch",
+    "build": "./scripts/build && npm run build:terser",
 
-    "build:terser": "./node_modules/terser/bin/terser build/offline_search.js -c -o build/offline_search.min.js && ./node_modules/terser/bin/terser build/offline_search_wasm.js -c -o build/offline_search_wasm.min.js",
-    "build": "./scripts/build && npm run build:terser"
+    "test:BuildFilterBuilder": "./scripts/test_build_filter_builder",
+    "test:TestFilterBuilder": "./node_modules/mocha/bin/mocha test/test_builder.js --grep 'FilterBuilder'",
+
+    "test:BuildOfflineSearch": "./scripts/test_build_offline_search",
+    "test:TestOfflineSearch": "karma start --single-run --browsers ChromeHeadless karma.conf.js",
+
+    "build:terser": "./node_modules/terser/bin/terser build/offline_search.js -c -o build/offline_search.min.js && ./node_modules/terser/bin/terser build/offline_search_wasm.js -c -o build/offline_search_wasm.min.js"
   },
   "devDependencies": {
     "chai": "^4.2.0",
