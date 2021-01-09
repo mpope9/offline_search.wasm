@@ -4,13 +4,13 @@
 
 This is a library to generate Webassembly bindings for a full-text search index backed by [xor_filters](https://github.com/FastFilter/xor_singleheader). It is heavily inspired by Tinysearch & lunr.js. This library strives to strike a balance between the highest level of size efficiency, performance, and features.
 
-## Features :mag: :ant:
+## :mag: :ant: Features
 * Slim size through [Webassembly](https://webassembly.org/) using [Emscripten](https://emscripten.org/index.html).
 * [Stemming](https://en.wikipedia.org/wiki/Stemming).
 * [Stop word filtering](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html).
 * Docker and non-docker based index building.
 
-## Usage :zap:
+## :zap: Usage
 
 Docker or Podman needs to be installed to build the binaries. This ensures the highest level of compatibility for building the Webassembly code, in the most contained way. However, if this is a limiting factor, the build scripts are located in `scripts/` and can be used to directly run against Emscripten's `emcc`.
 
@@ -26,7 +26,7 @@ The example Javascript code provided in `offline_search.js` should be enough for
 
 Alternativly, the script in `scripts/build` can be used. This will not call [`terser`](https://github.com/terser/terser).
 
-## Implementation Comparisons :sparkles:
+## :sparkles: Implementation Comparisons
 Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.com/weixsong/elasticlunr.js) and [Tinysearch](https://github.com/tinysearch/tinysearch). These libraries are very high quality, and their work is greatly appreciated.
 
 #### In comparision to `elasticlunr.js`:
@@ -54,13 +54,13 @@ Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.co
    * [smaz](https://github.com/antirez/smaz) compression on mapped strings.
 
 
-## Tests :rotating_light:
+## :rotating_light: Tests
 Included is a [mocha](https://mochajs.org/) + [chai](https://www.chaijs.com/) + [karma.js](https://karma-runner.github.io/latest/index.html) test suite. It can be ran with the following:
 ```
 npm test
 ```
 
-## 'Architecture' :rocket:
+## :rocket: 'Architecture'
 
 ### xor_builder
 The first part to the library is the xor_builder.js script. This is a NodeJS + WebAssembly module that takes the input JSON, and transforms it into a mapping of urls to xor_filter binaries. It tokenizes and applies stemming to the input, distills them down to hashes, then writes the files to the local file system defined in the configuration chunk. This is just for transformation, and will not be used by the browser.
