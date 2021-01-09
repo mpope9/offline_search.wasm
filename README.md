@@ -4,7 +4,7 @@
 
 This is a library to generate Webassembly bindings for a full-text search index backed by [xor_filters](https://github.com/FastFilter/xor_singleheader). It is heavily inspired by Tinysearch & lunr.js. This library strives to strike a balance between the highest level of size efficiency, performance, and features.
 
-## Features :sparkles:
+## Features :mag: :ant:
 * Slim size through [Webassembly](https://webassembly.org/) using [Emscripten](https://emscripten.org/index.html).
 * [Stemming](https://en.wikipedia.org/wiki/Stemming).
 * [Stop word filtering](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html).
@@ -18,7 +18,7 @@ To build a filter, the following `npm` command can be used:
 ```
 npm run build
 ```
-This will run the provided Node.js script in `lib/filter_builder.js`. This will run the test suite to generate the filter file. If using Node is an issue, it shouldn't be too difficult to use that code as a guide to build a filter builder in C, which can be run on a WASM VM locally.
+This will run the provided 0 dependency Node.js script in `lib/filter_builder.js`. This will run the test suite to generate the filter file. If using Node is an issue, it shouldn't be too difficult to use that code as a guide to build a filter builder in C, which can be run on a WASM VM locally.
 
 The WASM, example Javascript code, and example HTML script will be generated to the `build/` directory. You can copy that into your site for usage. It includes minified versions of the Javascript code, which should be suited for production. Be sure to copy the `offline_search_wasm.data` file into the same directory as the `offline_search_wasm.js` file. This contains the search index.
 
@@ -26,7 +26,7 @@ The example Javascript code provided in `offline_search.js` should be enough for
 
 Alternativly, the script in `scripts/build` can be used. This will not call [`terser`](https://github.com/terser/terser).
 
-## Implementation Comparisons :bulb:
+## Implementation Comparisons :sparkles:
 Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.com/weixsong/elasticlunr.js) and [Tinysearch](https://github.com/tinysearch/tinysearch). These libraries are very high quality, and their work is greatly appreciated.
 
 #### In comparision to `elasticlunr.js`:
@@ -52,6 +52,13 @@ Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.co
    * Full-Text Search through Stemming.
    * Stop word filtering.
    * [smaz](https://github.com/antirez/smaz) compression on mapped strings.
+
+
+## Tests :rotating_light:
+Included is a [mocha](https://mochajs.org/) + [chai](https://www.chaijs.com/) + [karma.js](https://karma-runner.github.io/latest/index.html) test suite. It can be ran with the following:
+```
+npm test
+```
 
 ## 'Architecture' :rocket:
 
