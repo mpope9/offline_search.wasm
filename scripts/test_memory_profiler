@@ -3,7 +3,7 @@ set -euo pipefail
 IFS=$'\n\t'
 
 ###
-# Script to build search wasm with test setting enabled.
+# Script to build search wasm with memory profiling to test for memory leaks.
 ###
 
 echo "--> Building offline search modules."
@@ -14,6 +14,10 @@ docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
     -O0 \
     -Wall \
     -s MODULARIZE=1 \
+    -fsanitize=undefined \
+    --profiling \
+    --profiling-funcs \
+    --memoryprofiler \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['intArrayFromString', 'allocate', 'ALLOC_NORMAL', 'getValue']" \
     --preload-file build/filters \
     -o build/offline_search_wasm.js

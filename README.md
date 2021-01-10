@@ -87,6 +87,18 @@ Included is a [mocha](https://mochajs.org/) + [chai](https://www.chaijs.com/) + 
 npm test
 ```
 
+To run the memory leak analyzer, run:
+```
+npm run memory_profile
+```
+
+Then to view it:
+```
+cd build
+python3 -m http.server
+```
+And navigate to `localhost:8000`
+
 ## :rocket: 'Architecture'
 
 ### xor_builder

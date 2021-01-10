@@ -37,7 +37,7 @@ docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
     -Oz \
     -Wall \
     -s MODULARIZE=1 \
-    --closure 1 \
+    --clojure 1 \
     -fno-rtti \
     -fno-exceptions \
     -s EXTRA_EXPORTED_RUNTIME_METHODS="['intArrayFromString', 'allocate', 'ALLOC_NORMAL', 'getValue']" \
@@ -54,4 +54,3 @@ rm build/filters
 cp lib/offline_search.js build/
 cp test/index.html build/
 
-# Minify ouput
