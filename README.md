@@ -1,6 +1,6 @@
 # offline_search.wasm
 
-## Warning Library Not Yet Complete
+## :rotating_light: Warning Library Not Yet Complete :rotating_light:
 
 This is a library to generate Webassembly bindings for a full-text search index backed by [xor filters](https://github.com/FastFilter/xor_singleheader). It is heavily inspired by Tinysearch & lunr.js. This library strives to strike a balance between the highest level of size efficiency, performance, and features.
 
