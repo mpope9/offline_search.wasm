@@ -89,7 +89,7 @@ npm test
 
 To run the memory leak analyzer, run:
 ```
-npm run memory_profile
+npm run memory_profiler
 ```
 
 Then to view it:
