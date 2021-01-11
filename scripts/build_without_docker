@@ -1,0 +1,54 @@
+#!/bin/bash
+set -euo pipefail
+IFS=$'\n\t'
+
+###
+# Script to build filter WITHOUT DOCKER, and copy example files to build/ directory.
+# Remove intermediate files to prevent confusion.
+###
+
+rm -f build/*
+
+echo "--> Building FilterBuilder wasm module."
+
+# Optimize with O2 here, becuase it is only for building the index
+# and doesn't need to be _crazy_ optimized.
+emcc src/xor_builder.c \
+    -s WASM=1 \
+    -O2 \
+    -Wall \
+    -s MODULARIZE=1 \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['intArrayFromString', 'allocate', 'ALLOC_NORMAL']" \
+    -s EXPORTED_FUNCTIONS="['_malloc', '_free']" \
+    -lnodefs.js \
+    -o build/xor_builder.js
+
+echo "--> Running FilterBuilder test, and generating test filter."
+
+./node_modules/mocha/bin/mocha --grep "FilterBuilder"
+
+echo "--> Building offline search modules."
+
+# Full _size_ optimizations here.
+emcc src/offline_search_wasm.c \
+    -s WASM=1 \
+    -Oz \
+    -Wall \
+    -s MODULARIZE=1 \
+    --clojure 1 \
+    -fno-rtti \
+    -fno-exceptions \
+    -s EXTRA_EXPORTED_RUNTIME_METHODS="['intArrayFromString', 'allocate', 'ALLOC_NORMAL', 'getValue']" \
+    -s EXPORTED_FUNCTIONS="['_malloc', '_free']" \
+    --preload-file build/filters \
+    -o build/offline_search_wasm.js
+
+# Remove intermediate build files.
+rm build/xor_builder.js
+rm build/xor_builder.wasm
+rm build/filters
+
+# Copy filter to build folder.
+cp lib/offline_search.js build/
+cp test/index.html build/
+

@@ -25,7 +25,7 @@ The WASM, example Javascript code, and example HTML script will be generated to 
 
 The example Javascript code provided in `offline_search.js` should be enough for production. However, it is also a good starting point if a more advanced implementation is needed.
 
-Alternativly, the script in `scripts/build` can be used. This will not call [`terser`](https://github.com/terser/terser) to minify the Javascript files.
+To build without Docker use the `scripts/build_without_docker` script. This will not call [`terser`](https://github.com/terser/terser) to minify the Javascript files.
 
 Here is how to use it from HTML:
 ```html
@@ -105,6 +105,8 @@ python3 -m http.server
 ```
 And navigate to `localhost:8000`
 
+Docker is required to run the tests.
+
 ## :rocket: 'Architecture'
 
 ### xor_builder
@@ -124,7 +126,7 @@ initialize_index()
 // 1..n times
 initiate_search();
 finalize_search();
-...
+// ...
 
 free_index();
 ```
