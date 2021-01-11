@@ -36,11 +36,18 @@ Here is how to use it from HTML:
 </head>
 
 <body>
+
+  <!-- Import JS glue code + WASM. -->
   <script type="text/javascript" src="offline_search_wasm.js"></script>
+
+  <!-- Import offline_search lib. -->
   <script type="module">
     import { OfflineSearch } from './offline_search.js';
 
+    // Create new search object, 'Module' is defined in 'offline_search_wasm.js'
     var offlineSearch = new OfflineSearch(Module());
+
+    // Initialize index from 'offline_search_wasm.data' file.
     offlineSearch.init().then(() => {
 
       // Keyword search.
@@ -50,6 +57,7 @@ Here is how to use it from HTML:
           console.log(value);
         });
 
+      // Free memory.
       offlineSearch.free();
     });
 
