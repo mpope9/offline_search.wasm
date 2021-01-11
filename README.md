@@ -117,9 +117,10 @@ This is the library that your Javascript code should use. It will initialize the
 The API is a bit complex. The goal of this library was to return the final result as a string to the Javascript side. This requires some juggling of memory, and should be used carefully.
 
 The flow should be the following:
-```
+```c
 initialize_index()
 
+// 1..n times
 initiate_search();
 finalize_search();
 ...
