@@ -10,12 +10,24 @@
     import { OfflineSearch } from './offline_search.js';
 
     var offlineSearch = new OfflineSearch(Module());
-    offlineSearch.init();
+    offlineSearch.init().then(() => {
 
-    var result = offlineSearch.search('endpoint');
-    console.log(result);
+      // Keyword search.
+      offlineSearch
+        .search('endpoint')
+        .then((value) => {
+          console.log(value);
+        });
 
-    offlineSearch.free();
+      // Keyword + 'stop word'.
+      //offlineSearch
+      //.search('endpoint the')
+      //.then((value) => {
+      //  console.log(value);
+      //});
+
+      offlineSearch.free();
+    });
 
   </script>
 </body>

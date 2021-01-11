@@ -69,10 +69,9 @@ bool build_xor(char* input, char* url)
    xor8_t filter;
    FILE* write_ptr;
 
-   char** tokens = NULL;
    int tokens_length = 0;
 
-   tokenize(input, &tokens, &tokens_length);
+   char** tokens = tokenize(input, &tokens_length);
 
    // Could move stemming and hashing into the tokenization loop. But, noodles to that.
    uint64_t hashes[tokens_length];
@@ -132,6 +131,12 @@ bool build_xor(char* input, char* url)
    // Cleanup
    fclose(write_ptr);
    xor8_free(&filter);
+
+   for(int i = 0; i < tokens_length; ++i)
+   {
+      free(tokens[i]);
+   }
+   free(tokens);
 
    return true;
 }

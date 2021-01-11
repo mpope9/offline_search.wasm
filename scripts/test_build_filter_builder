@@ -6,7 +6,7 @@ IFS=$'\n\t'
 # Script to build filter wasm with test setting enabled.
 ###
 
-rm build/*
+rm -f build/*
 
 echo "--> Building FilterBuilder wasm module."
 

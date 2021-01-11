@@ -112,7 +112,7 @@ int initialize_index()
  *
  */
 EMSCRIPTEN_KEEPALIVE
-int initiate_search(char* input, int* output_array)
+int initiate_search(char* input, bool* output_array)
 {
 
    if(urls == NULL || indexes == NULL || indexes_length == 0)
@@ -127,10 +127,9 @@ int initiate_search(char* input, int* output_array)
       return -1;
    }
 
-   char** tokens;
    int tokens_length = 0;
 
-   tokenize(input, &tokens, &tokens_length);
+   char** tokens = tokenize(input, &tokens_length);
 
    if(tokens_length == 0)
    {
@@ -142,32 +141,38 @@ int initiate_search(char* input, int* output_array)
 
    stem_n_hash(tokens, tokens_length, hashes, &hashes_length);
 
+   // Free tokens.
+   for(int i = 0; i < tokens_length; ++i)
+   {
+      free(tokens[i]);
+   }
+   free(tokens);
+
    // Skip the overhead of deduping.
 
    int output_size = 0;
-   bool should_add = true;
+   bool should_add = false;
    for(int i = 0; i < indexes_length; i++) 
    {
       for(int j = 0; j < hashes_length; j++)
       {
-         if(!xor8_contain(hashes[j], indexes[i])) 
+         if(xor8_contain(hashes[j], indexes[i])) 
          {
-            should_add = false;
-            break;
+            should_add = true;
          }
       }
 
       if(should_add)
       {
-         output_array[i] = i;
+         output_array[i] = true;
          // Plus two for the '||' deliminators.
          output_size += urls_lengths[i] + 2;
       }
       else
       {
-         output_array[i] = -1;
+         output_array[i] = false;
       }
-      should_add = true;
+      should_add = false;
    }
 
    return output_size;
@@ -181,14 +186,14 @@ int initiate_search(char* input, int* output_array)
  * value previously returned by initiate_search.
  * The urls will be deliniated by '||'.
  *
- * @param {int*} urls_index The mapping.
+ * @param {bool*} should_add_array The array of urls that should be added.
  * @param {char*} output_array Array that will be filled with the url result.
  * @result {int} result The length of the output string. A value of -1 denotes an error. 
  *                      A value of 0 denotes no results.
  *
  */
 EMSCRIPTEN_KEEPALIVE
-void finalize_search(int* urls_index, char* output_array)
+void finalize_search(bool* should_add_array, char* output_array)
 {
 
    if(urls == NULL)
@@ -197,12 +202,12 @@ void finalize_search(int* urls_index, char* output_array)
       return;
    }
 
-   if(urls_index == NULL)
+   if(should_add_array == NULL)
    {
       printf("urls_index not initialized.");
       return;
    }
-
+   
    if(output_array == NULL)
    {
       printf("output_array not initialized");
@@ -212,15 +217,12 @@ void finalize_search(int* urls_index, char* output_array)
    int output_index = 0;
    for(int i = 0; i < indexes_length; i++)
    {
-      int url_index = urls_index[i];
-
-      // Return at first instance of -1
-      if(url_index < 0)
+      if(!should_add_array[i])
       {
          continue;
       }
 
-      char* url = urls[url_index];
+      char* url = urls[i];
       int url_length = urls_lengths[i];
 
       for(int j = 0; j < url_length; j++)

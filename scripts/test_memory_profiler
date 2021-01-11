@@ -6,7 +6,7 @@ IFS=$'\n\t'
 # Script to build search wasm with memory profiling to test for memory leaks.
 ###
 
-echo "--> Building offline search modules."
+echo "--> Building offline search modules with memory profiling enabled."
 
 docker run --rm -v $(pwd):/src -u $(id -u):$(id -g) emscripten/emsdk emcc \
     src/offline_search_wasm.c \

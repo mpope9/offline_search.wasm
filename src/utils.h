@@ -69,7 +69,7 @@ void clean_token(char* token)
  * Breaks strings into sanitized tokens, checks if it is a stop word, then adds
  * to the token output.
  */
-void tokenize(char* input, char*** tokens_input, int* tokens_length)
+char** tokenize(char* input, int* tokens_length)
 {
    int max_length = INITIAL_TOKENS_SIZE;
    int length = 0;
@@ -90,6 +90,10 @@ void tokenize(char* input, char*** tokens_input, int* tokens_length)
          tokens[length] = curr;
          length++;
       }
+      else
+      {
+         free(curr);
+      }
       current_substr = strtok(NULL, STRTOK_SEPERATORS);
 
       // Need more memory.
@@ -101,7 +105,7 @@ void tokenize(char* input, char*** tokens_input, int* tokens_length)
    }
 
    *tokens_length = length;
-   *tokens_input = tokens;
+   return tokens;
 }
 
 /**
@@ -134,13 +138,17 @@ void stem_n_hash(char** tokens, int tokens_length, uint64_t* hashes, int* hashes
    {
       char* token = tokens[i];
       int token_length = strlen(token);
-      
+
       // Stemming, modifies string in-place, and needs null termination.
-      int new_length = stem(token, 0, token_length - 1);
+      struct stemmer* stemmer = create_stemmer();
+
+      int new_length = stem(stemmer, token, token_length - 1);
       if(new_length < token_length)
       {
          token[new_length + 1] = '\0';
       }
+
+      free_stemmer(stemmer);
 
       hashes[hashes_length] = hash_token(token);
       hashes_length++;

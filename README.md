@@ -64,7 +64,7 @@ Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.co
    * Yet. Stemming and tokenization algorithms in C are welcome for other languages.
 3) Support for [stemming](https://en.wikipedia.org/wiki/Stemming).
    * elasticlunr.js uses a [Javascript stemmer](https://github.com/weixsong/elasticlunr.js/blob/master/lib/stemmer.js) based off of the [PorterStemmer](https://tartarus.org/martin/PorterStemmer/index.html).
-   * offline_search.wasm compiles the [C version of PorterStemmer](https://tartarus.org/martin/PorterStemmer/c.txt) into the WASM. It results in a smaller, optimized binary.
+   * offline_search.wasm compiles the [threadsafe C version of PorterStemmer](https://tartarus.org/martin/PorterStemmer/c_thread_safe.txt) into the WASM. It results in a smaller, optimized binary.
 4) No support for Query-Time Boosting.
 
 #### In comparision to `Tinysearch`:

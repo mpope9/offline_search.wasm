@@ -2,9 +2,12 @@
 #ifndef PORTER_STEMMER_H
 #define PORTER_STEMMER_H
 
-/* This is the Porter stemming algorithm, coded up in ANSI C by the
-   author. It may be be regarded as canonical, in that it follows the
-   algorithm presented in
+
+/* This is the Porter stemming algorithm, coded up as thread-safe ANSI C
+   by the author.
+
+   It may be be regarded as cononical, in that it follows the algorithm
+   presented in
 
    Porter, 1980, An algorithm for suffix stripping, Program, Vol. 14,
    no. 3, pp 130-137,
@@ -25,315 +28,372 @@
 
    The algorithm as encoded here is particularly fast.
 
-   Release 1: was many years ago
-   Release 2: 11 Apr 2013
-       fixes a bug noted by Matt Patenaude <matt@mattpatenaude.com>,
+   Release 1: the basic non-thread safe version
 
-       case 'o': if (ends("\03" "ion") && (b[j] == 's' || b[j] == 't')) break;
-           ==>
-       case 'o': if (ends("\03" "ion") && j >= k0 && (b[j] == 's' || b[j] == 't')) break;
+   Release 2: this thread-safe version
 
-       to avoid accessing b[k0-1] when the word in b is "ion".
-   Release 3: 25 Mar 2014
-       fixes a similar bug noted by Klemens Baum <klemensbaum@gmail.com>,
-       that if step1ab leaves a one letter result (ied -> i, aing -> a etc),
-       step2 and step4 access the byte before the first letter. So we skip
-       steps after step1ab unless k > k0.
+   Release 3: 11 Apr 2013, fixes the bug noted by Matt Patenaude (see the
+   basic version for details)
+
+   Release 4: 25 Mar 2014, fixes the bug noted by Klemens Baum (see the
+   basic version for details)
+   */
+
+#include <stdlib.h>  /* for malloc, free */
+#include <string.h>  /* for memcmp, memmove */
+
+/* You will probably want to move the following declarations to a central
+   header file.
+   */
+
+struct stemmer;
+
+extern struct stemmer * create_stemmer(void);
+extern void free_stemmer(struct stemmer * z);
+
+extern int stem(struct stemmer * z, char * b, int k);
+
+
+
+/* The main part of the stemming algorithm starts here.
 */
-
-#include <string.h>  /* for memmove */
 
 #define TRUE 1
 #define FALSE 0
 
-/* The main part of the stemming algorithm starts here. b is a buffer
-   holding a word to be stemmed. The letters are in b[k0], b[k0+1] ...
-   ending at b[k]. In fact k0 = 0 in this demo program. k is readjusted
-   downwards as the stemming progresses. Zero termination is not in fact
-   used in the algorithm.
+/* stemmer is a structure for a few local bits of data,
+*/
+
+struct stemmer {
+   char * b;       /* buffer for word to be stemmed */
+   int k;          /* offset to the end of the string */
+   int j;          /* a general offset into the string */
+};
+
+
+/* Member b is a buffer holding a word to be stemmed. The letters are in
+   b[0], b[1] ... ending at b[z->k]. Member k is readjusted downwards as
+   the stemming progresses. Zero termination is not in fact used in the
+   algorithm.
 
    Note that only lower case sequences are stemmed. Forcing to lower case
    should be done before stem(...) is called.
-*/
 
-static char * b;       /* buffer for word to be stemmed */
-static int k,k0,j;     /* j is a general offset into the string */
 
-/* cons(i) is TRUE <=> b[i] is a consonant. */
+   Typical usage is:
 
-static int cons(int i)
-{  switch (b[i])
+   struct stemmer * z = create_stemmer();
+   char b[] = "pencils";
+   int res = stem(z, b, 6);
+   /- stem the 7 characters of b[0] to b[6]. The result, res,
+   will be 5 (the 's' is removed). -/
+   free_stemmer(z);
+   */
+
+
+extern struct stemmer * create_stemmer(void)
+{
+   return (struct stemmer *) malloc(sizeof(struct stemmer));
+   /* assume malloc succeeds */
+}
+
+extern void free_stemmer(struct stemmer * z)
+{
+   free(z);
+}
+
+
+/* cons(z, i) is TRUE <=> b[i] is a consonant. ('b' means 'z->b', but here
+   and below we drop 'z->' in comments.
+   */
+
+   static int cons(struct stemmer * z, int i)
+{  switch (z->b[i])
    {  case 'a': case 'e': case 'i': case 'o': case 'u': return FALSE;
-      case 'y': return (i==k0) ? TRUE : !cons(i-1);
+      case 'y': return (i == 0) ? TRUE : !cons(z, i - 1);
       default: return TRUE;
    }
 }
 
-/* m() measures the number of consonant sequences between k0 and j. if c is
+/* m(z) measures the number of consonant sequences between 0 and j. if c is
    a consonant sequence and v a vowel sequence, and <..> indicates arbitrary
    presence,
 
-      <c><v>       gives 0
-      <c>vc<v>     gives 1
-      <c>vcvc<v>   gives 2
-      <c>vcvcvc<v> gives 3
-      ....
-*/
+   <c><v>       gives 0
+   <c>vc<v>     gives 1
+   <c>vcvc<v>   gives 2
+   <c>vcvcvc<v> gives 3
+   ....
+   */
 
-static int m()
+static int m(struct stemmer * z)
 {  int n = 0;
-   int i = k0;
+   int i = 0;
+   int j = z->j;
    while(TRUE)
    {  if (i > j) return n;
-      if (! cons(i)) break; i++;
+      if (! cons(z, i)) break; i++;
    }
    i++;
    while(TRUE)
    {  while(TRUE)
       {  if (i > j) return n;
-            if (cons(i)) break;
-            i++;
+         if (cons(z, i)) break;
+         i++;
       }
       i++;
       n++;
       while(TRUE)
       {  if (i > j) return n;
-         if (! cons(i)) break;
+         if (! cons(z, i)) break;
          i++;
       }
       i++;
    }
 }
 
-/* vowelinstem() is TRUE <=> k0,...j contains a vowel */
+/* vowelinstem(z) is TRUE <=> 0,...j contains a vowel */
 
-static int vowelinstem()
-{  int i; for (i = k0; i <= j; i++) if (! cons(i)) return TRUE;
+static int vowelinstem(struct stemmer * z)
+{
+   int j = z->j;
+   int i; for (i = 0; i <= j; i++) if (! cons(z, i)) return TRUE;
    return FALSE;
 }
 
-/* doublec(j) is TRUE <=> j,(j-1) contain a double consonant. */
+/* doublec(z, j) is TRUE <=> j,(j-1) contain a double consonant. */
 
-static int doublec(int j)
-{  if (j < k0+1) return FALSE;
-   if (b[j] != b[j-1]) return FALSE;
-   return cons(j);
+static int doublec(struct stemmer * z, int j)
+{
+   char * b = z->b;
+   if (j < 1) return FALSE;
+   if (b[j] != b[j - 1]) return FALSE;
+   return cons(z, j);
 }
 
-/* cvc(i) is TRUE <=> i-2,i-1,i has the form consonant - vowel - consonant
+/* cvc(z, i) is TRUE <=> i-2,i-1,i has the form consonant - vowel - consonant
    and also if the second c is not w,x or y. this is used when trying to
    restore an e at the end of a short word. e.g.
 
-      cav(e), lov(e), hop(e), crim(e), but
-      snow, box, tray.
+   cav(e), lov(e), hop(e), crim(e), but
+   snow, box, tray.
 
 */
 
-static int cvc(int i)
-{  if (i < k0+2 || !cons(i) || cons(i-1) || !cons(i-2)) return FALSE;
-   {  int ch = b[i];
-      if (ch == 'w' || ch == 'x' || ch == 'y') return FALSE;
+static int cvc(struct stemmer * z, int i)
+{  if (i < 2 || !cons(z, i) || cons(z, i - 1) || !cons(z, i - 2)) return FALSE;
+   {  int ch = z->b[i];
+      if (ch  == 'w' || ch == 'x' || ch == 'y') return FALSE;
    }
    return TRUE;
 }
 
-/* ends(s) is TRUE <=> k0,...k ends with the string s. */
+/* ends(z, s) is TRUE <=> 0,...k ends with the string s. */
 
-static int ends(char * s)
+static int ends(struct stemmer * z, char * s)
 {  int length = s[0];
+   char * b = z->b;
+   int k = z->k;
    if (s[length] != b[k]) return FALSE; /* tiny speed-up */
-   if (length > k-k0+1) return FALSE;
-   if (memcmp(b+k-length+1,s+1,length) != 0) return FALSE;
-   j = k-length;
+   if (length > k + 1) return FALSE;
+   if (memcmp(b + k - length + 1, s + 1, length) != 0) return FALSE;
+   z->j = k-length;
    return TRUE;
 }
 
-/* setto(s) sets (j+1),...k to the characters in the string s, readjusting
+/* setto(z, s) sets (j+1),...k to the characters in the string s, readjusting
    k. */
 
-static void setto(char * s)
+static void setto(struct stemmer * z, char * s)
 {  int length = s[0];
-   memmove(b+j+1,s+1,length);
-   k = j+length;
+   int j = z->j;
+   memmove(z->b + j + 1, s + 1, length);
+   z->k = j+length;
 }
 
-/* r(s) is used further down. */
+/* r(z, s) is used further down. */
 
-static void r(char * s) { if (m() > 0) setto(s); }
+static void r(struct stemmer * z, char * s) { if (m(z) > 0) setto(z, s); }
 
-/* step1ab() gets rid of plurals and -ed or -ing. e.g.
+/* step1ab(z) gets rid of plurals and -ed or -ing. e.g.
 
-       caresses  ->  caress
-       ponies    ->  poni
-       ties      ->  ti
-       caress    ->  caress
-       cats      ->  cat
+   caresses  ->  caress
+   ponies    ->  poni
+   ties      ->  ti
+   caress    ->  caress
+   cats      ->  cat
 
-       feed      ->  feed
-       agreed    ->  agree
-       disabled  ->  disable
+   feed      ->  feed
+   agreed    ->  agree
+   disabled  ->  disable
 
-       matting   ->  mat
-       mating    ->  mate
-       meeting   ->  meet
-       milling   ->  mill
-       messing   ->  mess
+   matting   ->  mat
+   mating    ->  mate
+   meeting   ->  meet
+   milling   ->  mill
+   messing   ->  mess
 
-       meetings  ->  meet
+   meetings  ->  meet
 
 */
 
-static void step1ab()
-{  if (b[k] == 's')
-   {  if (ends("\04" "sses")) k -= 2; else
-      if (ends("\03" "ies")) setto("\01" "i"); else
-      if (b[k-1] != 's') k--;
+static void step1ab(struct stemmer * z)
+{
+   char * b = z->b;
+   if (b[z->k] == 's')
+   {  if (ends(z, "\04" "sses")) z->k -= 2; else
+      if (ends(z, "\03" "ies")) setto(z, "\01" "i"); else
+         if (b[z->k - 1] != 's') z->k--;
    }
-   if (ends("\03" "eed")) { if (m() > 0) k--; } else
-   if ((ends("\02" "ed") || ends("\03" "ing")) && vowelinstem())
-   {  k = j;
-      if (ends("\02" "at")) setto("\03" "ate"); else
-      if (ends("\02" "bl")) setto("\03" "ble"); else
-      if (ends("\02" "iz")) setto("\03" "ize"); else
-      if (doublec(k))
-      {  k--;
-         {  int ch = b[k];
-            if (ch == 'l' || ch == 's' || ch == 'z') k++;
-         }
+   if (ends(z, "\03" "eed")) { if (m(z) > 0) z->k--; } else
+      if ((ends(z, "\02" "ed") || ends(z, "\03" "ing")) && vowelinstem(z))
+      {  z->k = z->j;
+         if (ends(z, "\02" "at")) setto(z, "\03" "ate"); else
+            if (ends(z, "\02" "bl")) setto(z, "\03" "ble"); else
+               if (ends(z, "\02" "iz")) setto(z, "\03" "ize"); else
+                  if (doublec(z, z->k))
+                  {  z->k--;
+                     {  int ch = b[z->k];
+                        if (ch == 'l' || ch == 's' || ch == 'z') z->k++;
+                     }
+                  }
+                  else if (m(z) == 1 && cvc(z, z->k)) setto(z, "\01" "e");
       }
-      else if (m() == 1 && cvc(k)) setto("\01" "e");
-   }
 }
 
-/* step1c() turns terminal y to i when there is another vowel in the stem. */
+/* step1c(z) turns terminal y to i when there is another vowel in the stem. */
 
-static void step1c() { if (ends("\01" "y") && vowelinstem()) b[k] = 'i'; }
+static void step1c(struct stemmer * z)
+{
+   if (ends(z, "\01" "y") && vowelinstem(z)) z->b[z->k] = 'i';
+}
 
 
-/* step2() maps double suffices to single ones. so -ization ( = -ize plus
+/* step2(z) maps double suffices to single ones. so -ization ( = -ize plus
    -ation) maps to -ize etc. note that the string before the suffix must give
-   m() > 0. */
+   m(z) > 0. */
 
-static void step2() { switch (b[k-1])
-{
-    case 'a': if (ends("\07" "ational")) { r("\03" "ate"); break; }
-              if (ends("\06" "tional")) { r("\04" "tion"); break; }
-              break;
-    case 'c': if (ends("\04" "enci")) { r("\04" "ence"); break; }
-              if (ends("\04" "anci")) { r("\04" "ance"); break; }
-              break;
-    case 'e': if (ends("\04" "izer")) { r("\03" "ize"); break; }
-              break;
-    case 'l': if (ends("\03" "bli")) { r("\03" "ble"); break; } /*-DEPARTURE-*/
+static void step2(struct stemmer * z) { switch (z->b[z->k-1])
+   {
+      case 'a': if (ends(z, "\07" "ational")) { r(z, "\03" "ate"); break; }
+                   if (ends(z, "\06" "tional")) { r(z, "\04" "tion"); break; }
+                break;
+      case 'c': if (ends(z, "\04" "enci")) { r(z, "\04" "ence"); break; }
+                   if (ends(z, "\04" "anci")) { r(z, "\04" "ance"); break; }
+                break;
+      case 'e': if (ends(z, "\04" "izer")) { r(z, "\03" "ize"); break; }
+                   break;
+      case 'l': if (ends(z, "\03" "bli")) { r(z, "\03" "ble"); break; } /*-DEPARTURE-*/
 
- /* To match the published algorithm, replace this line with
-    case 'l': if (ends("\04" "abli")) { r("\04" "able"); break; } */
+                   /* To match the published algorithm, replace this line with
+                      case 'l': if (ends(z, "\04" "abli")) { r(z, "\04" "able"); break; } */
 
-              if (ends("\04" "alli")) { r("\02" "al"); break; }
-              if (ends("\05" "entli")) { r("\03" "ent"); break; }
-              if (ends("\03" "eli")) { r("\01" "e"); break; }
-              if (ends("\05" "ousli")) { r("\03" "ous"); break; }
-              break;
-    case 'o': if (ends("\07" "ization")) { r("\03" "ize"); break; }
-              if (ends("\05" "ation")) { r("\03" "ate"); break; }
-              if (ends("\04" "ator")) { r("\03" "ate"); break; }
-              break;
-    case 's': if (ends("\05" "alism")) { r("\02" "al"); break; }
-              if (ends("\07" "iveness")) { r("\03" "ive"); break; }
-              if (ends("\07" "fulness")) { r("\03" "ful"); break; }
-              if (ends("\07" "ousness")) { r("\03" "ous"); break; }
-              break;
-    case 't': if (ends("\05" "aliti")) { r("\02" "al"); break; }
-              if (ends("\05" "iviti")) { r("\03" "ive"); break; }
-              if (ends("\06" "biliti")) { r("\03" "ble"); break; }
-              break;
-    case 'g': if (ends("\04" "logi")) { r("\03" "log"); break; } /*-DEPARTURE-*/
+                   if (ends(z, "\04" "alli")) { r(z, "\02" "al"); break; }
+                if (ends(z, "\05" "entli")) { r(z, "\03" "ent"); break; }
+                if (ends(z, "\03" "eli")) { r(z, "\01" "e"); break; }
+                if (ends(z, "\05" "ousli")) { r(z, "\03" "ous"); break; }
+                break;
+      case 'o': if (ends(z, "\07" "ization")) { r(z, "\03" "ize"); break; }
+                   if (ends(z, "\05" "ation")) { r(z, "\03" "ate"); break; }
+                if (ends(z, "\04" "ator")) { r(z, "\03" "ate"); break; }
+                break;
+      case 's': if (ends(z, "\05" "alism")) { r(z, "\02" "al"); break; }
+                   if (ends(z, "\07" "iveness")) { r(z, "\03" "ive"); break; }
+                if (ends(z, "\07" "fulness")) { r(z, "\03" "ful"); break; }
+                if (ends(z, "\07" "ousness")) { r(z, "\03" "ous"); break; }
+                break;
+      case 't': if (ends(z, "\05" "aliti")) { r(z, "\02" "al"); break; }
+                   if (ends(z, "\05" "iviti")) { r(z, "\03" "ive"); break; }
+                if (ends(z, "\06" "biliti")) { r(z, "\03" "ble"); break; }
+                break;
+      case 'g': if (ends(z, "\04" "logi")) { r(z, "\03" "log"); break; } /*-DEPARTURE-*/
 
- /* To match the published algorithm, delete this line */
+                   /* To match the published algorithm, delete this line */
 
-} }
+   } }
 
-/* step3() deals with -ic-, -full, -ness etc. similar strategy to step2. */
+/* step3(z) deals with -ic-, -full, -ness etc. similar strategy to step2. */
 
-static void step3() { switch (b[k])
-{
-    case 'e': if (ends("\05" "icate")) { r("\02" "ic"); break; }
-              if (ends("\05" "ative")) { r("\00" ""); break; }
-              if (ends("\05" "alize")) { r("\02" "al"); break; }
-              break;
-    case 'i': if (ends("\05" "iciti")) { r("\02" "ic"); break; }
-              break;
-    case 'l': if (ends("\04" "ical")) { r("\02" "ic"); break; }
-              if (ends("\03" "ful")) { r("\00" ""); break; }
-              break;
-    case 's': if (ends("\04" "ness")) { r("\00" ""); break; }
-              break;
-} }
+static void step3(struct stemmer * z) { switch (z->b[z->k])
+   {
+      case 'e': if (ends(z, "\05" "icate")) { r(z, "\02" "ic"); break; }
+                   if (ends(z, "\05" "ative")) { r(z, "\00" ""); break; }
+                if (ends(z, "\05" "alize")) { r(z, "\02" "al"); break; }
+                break;
+      case 'i': if (ends(z, "\05" "iciti")) { r(z, "\02" "ic"); break; }
+                   break;
+      case 'l': if (ends(z, "\04" "ical")) { r(z, "\02" "ic"); break; }
+                   if (ends(z, "\03" "ful")) { r(z, "\00" ""); break; }
+                break;
+      case 's': if (ends(z, "\04" "ness")) { r(z, "\00" ""); break; }
+                   break;
+   } }
 
-/* step4() takes off -ant, -ence etc., in context <c>vcvc<v>. */
+/* step4(z) takes off -ant, -ence etc., in context <c>vcvc<v>. */
 
-static void step4()
-{  switch (b[k-1])
-    {  case 'a': if (ends("\02" "al")) break; return;
-       case 'c': if (ends("\04" "ance")) break;
-                 if (ends("\04" "ence")) break; return;
-       case 'e': if (ends("\02" "er")) break; return;
-       case 'i': if (ends("\02" "ic")) break; return;
-       case 'l': if (ends("\04" "able")) break;
-                 if (ends("\04" "ible")) break; return;
-       case 'n': if (ends("\03" "ant")) break;
-                 if (ends("\05" "ement")) break;
-                 if (ends("\04" "ment")) break;
-                 if (ends("\03" "ent")) break; return;
-       case 'o': if (ends("\03" "ion") && j >= k0 && (b[j] == 's' || b[j] == 't')) break;
-                 if (ends("\02" "ou")) break; return;
-                 /* takes care of -ous */
-       case 's': if (ends("\03" "ism")) break; return;
-       case 't': if (ends("\03" "ate")) break;
-                 if (ends("\03" "iti")) break; return;
-       case 'u': if (ends("\03" "ous")) break; return;
-       case 'v': if (ends("\03" "ive")) break; return;
-       case 'z': if (ends("\03" "ize")) break; return;
-       default: return;
-    }
-    if (m() > 1) k = j;
-}
-
-/* step5() removes a final -e if m() > 1, and changes -ll to -l if
-   m() > 1. */
-
-static void step5()
-{  j = k;
-   if (b[k] == 'e')
-   {  int a = m();
-      if (a > 1 || (a == 1 && !cvc(k-1))) k--;
+   static void step4(struct stemmer * z)
+{  switch (z->b[z->k-1])
+   {  case 'a': if (ends(z, "\02" "al")) break; return;
+      case 'c': if (ends(z, "\04" "ance")) break;
+                   if (ends(z, "\04" "ence")) break; return;
+      case 'e': if (ends(z, "\02" "er")) break; return;
+      case 'i': if (ends(z, "\02" "ic")) break; return;
+      case 'l': if (ends(z, "\04" "able")) break;
+                   if (ends(z, "\04" "ible")) break; return;
+      case 'n': if (ends(z, "\03" "ant")) break;
+                   if (ends(z, "\05" "ement")) break;
+                if (ends(z, "\04" "ment")) break;
+                if (ends(z, "\03" "ent")) break; return;
+      case 'o': if (ends(z, "\03" "ion") && z->j >= 0 && (z->b[z->j] == 's' || z->b[z->j] == 't')) break;
+                   if (ends(z, "\02" "ou")) break; return;
+                /* takes care of -ous */
+      case 's': if (ends(z, "\03" "ism")) break; return;
+      case 't': if (ends(z, "\03" "ate")) break;
+                   if (ends(z, "\03" "iti")) break; return;
+      case 'u': if (ends(z, "\03" "ous")) break; return;
+      case 'v': if (ends(z, "\03" "ive")) break; return;
+      case 'z': if (ends(z, "\03" "ize")) break; return;
+      default: return;
    }
-   if (b[k] == 'l' && doublec(k) && m() > 1) k--;
+   if (m(z) > 1) z->k = z->j;
 }
 
-/* In stem(p,i,j), p is a char pointer, and the string to be stemmed is from
-   p[i] to p[j] inclusive. Typically i is zero and j is the offset to the last
-   character of a string, (p[j+1] == '\0'). The stemmer adjusts the
-   characters p[i] ... p[j] and returns the new end-point of the string, k.
-   Stemming never increases word length, so i <= k <= j. To turn the stemmer
-   into a module, declare 'stem' as extern, and delete the remainder of this
-   file.
-*/
+/* step5(z) removes a final -e if m(z) > 1, and changes -ll to -l if
+   m(z) > 1. */
 
-int stem(char * p, int i, int j)
-{  b = p; k = j; k0 = i; /* copy the parameters into statics */
-   if (k <= k0+1) return k; /*-DEPARTURE-*/
+static void step5(struct stemmer * z)
+{
+   char * b = z->b;
+   z->j = z->k;
+   if (b[z->k] == 'e')
+   {  int a = m(z);
+      if (a > 1 || (a == 1 && !cvc(z, z->k - 1))) z->k--;
+   }
+   if (b[z->k] == 'l' && doublec(z, z->k) && m(z) > 1) z->k--;
+}
+
+/* In stem(z, b, k), b is a char pointer, and the string to be stemmed is
+   from b[0] to b[k] inclusive.  Possibly b[k+1] == '\0', but it is not
+   important. The stemmer adjusts the characters b[0] ... b[k] and returns
+   the new end-point of the string, k'. Stemming never increases word
+   length, so 0 <= k' <= k.
+   */
+
+extern int stem(struct stemmer * z, char * b, int k)
+{
+   if (k <= 1) return k; /*-DEPARTURE-*/
+   z->b = b; z->k = k; /* copy the parameters into z */
 
    /* With this line, strings of length 1 or 2 don't go through the
       stemming process, although no mention is made of this in the
       published algorithm. Remove the line to match the published
       algorithm. */
 
-   step1ab();
-   if (k > k0) {
-       step1c(); step2(); step3(); step4(); step5();
+   step1ab(z);
+   if (z->k > 0) {
+      step1c(z); step2(z); step3(z); step4(z); step5(z);
    }
-   return k;
+   return z->k;
 }
 
 /*--------------------stemmer definition ends here------------------------*/

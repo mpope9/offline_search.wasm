@@ -7,7 +7,7 @@ IFS=$'\n\t'
 # Remove intermediate files to prevent confusion.
 ###
 
-rm build/*
+rm -f build/*
 
 echo "--> Building FilterBuilder wasm module."
 
