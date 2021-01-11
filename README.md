@@ -74,9 +74,9 @@ Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.co
 
 #### In comparision to `Tinysearch`:
 1) Written in C.
-   * Tinysearch is written in Rust, and requires Cargo and a rather large toolchain for installation.
+   * Tinysearch is written in Rust.
    * offline_search.wasm is written mostly in C and Javascript, and the example implementation relies on Node.js to build the index.
-   * Using Javascript should be more familiar to those in the web world, and C is a simpler language.
+   * Using Javascript should be more familiar to those in the web world, C is a simpler language, and C is eaiser to optimize for size currently.
 2) Smaller index size.
    * Tinysearch utilizes [Bloom Filters](https://en.wikipedia.org/wiki/Bloom_filter) to create indexes.
    * offline_search.wasm utilizes [xor_filters](https://github.com/FastFilter/xor_singleheader) to create indexes. These are smaller in size than Bloom Filters, and have a smaller false positive rate.
