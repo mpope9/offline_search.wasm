@@ -79,7 +79,8 @@ Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.co
    * Using Javascript should be more familiar to those in the web world, C is a simpler language, and C is eaiser to optimize for size currently.
 2) Smaller index size.
    * Tinysearch utilizes [Bloom Filters](https://en.wikipedia.org/wiki/Bloom_filter) to create indexes.
-   * offline_search.wasm utilizes [xor_filters](https://github.com/FastFilter/xor_singleheader) to create indexes. These are smaller in size than Bloom Filters, and have a smaller false positive rate.
+   * offline_search.wasm utilizes [xor_filters](https://github.com/FastFilter/xor_singleheader) to create indexes. 
+      * These are smaller in size than Bloom Filters, and have a smaller false positive rate.
 3) More features
    * Full-Text Search through Stemming.
    * Stop word filtering.
