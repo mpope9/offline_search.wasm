@@ -19,7 +19,7 @@ To build a filter, the following `npm` command can be used:
 ```
 npm run build
 ```
-This will run the provided 0 dependency Node.js script in `lib/filter_builder.js`. If using Node.js is an issue, it shouldn't be too difficult to use that code as a guide to build a filter builder in C, which can be run on a WASM Runtime locally, like [Wasmtime](https://github.com/bytecodealliance/wasmtime).
+This will run the provided 0 dependency Node.js script in `lib/filter_builder.js`.
 
 The WASM, example Javascript code, and example HTML script will be generated to the `build/` directory. You can copy that into your site for usage. It includes minified versions of the Javascript code, which should be suited for production. Be sure to copy the `offline_search_wasm.data` file into the root directory of your webserver. This contains the search index.
 
@@ -41,12 +41,17 @@ Here is how to use it from HTML:
     import { OfflineSearch } from './offline_search.js';
 
     var offlineSearch = new OfflineSearch(Module());
-    offlineSearch.init();
+    offlineSearch.init().then(() => {
 
-    var result = offlineSearch.search('endpoint');
-    console.log(result);
+      // Keyword search.
+      offlineSearch
+        .search('endpoint')
+        .then((value) => {
+          console.log(value);
+        });
 
-    offlineSearch.free();
+      offlineSearch.free();
+    });
 
   </script>
 </body>
@@ -102,10 +107,26 @@ And navigate to `localhost:8000`
 ## :rocket: 'Architecture'
 
 ### xor_builder
-The first part to the library is the xor_builder.js script. This is a NodeJS + WebAssembly module that takes the input JSON, and transforms it into a mapping of urls to xor_filter binaries. It tokenizes and applies stemming to the input, distills them down to hashes, then writes the files to the local file system defined in the configuration chunk. This is just for transformation, and will not be used by the browser.
+The first part to the library is the xor_builder.js script. This is a 0 dep Node.js script + WebAssembly module that takes the input JSON, and transforms it into a mapping of urls to xor_filter binaries. It tokenizes and applies stemming to the input, distills them down to hashes and a xor filter, then writes the files to the local file system. This is just used to transform the inputs into an index, and will not included in the final output or be used by the browser.
+
+If using Node.js is an issue it shouldn't be too difficult to use that code as a guide to build an index builder in C, which can be run on a WASM Runtime locally, like [Wasmtime](https://github.com/bytecodealliance/wasmtime).
 
 ### offline_search.js
 This is the library that your Javascript code should use. It will initialize the Webassembly code and load the index, and make it available for querying.
+
+The API is a bit complex. The goal of this library was to return the final result as a string to the Javascript side. This requires some juggling of memory, and should be used carefully.
+
+The flow should be the following:
+```
+initialize_index()
+
+initiate_search();
+finalize_search();
+...
+
+free_index();
+```
+
 
 ### Exposed WASM Functions
 
@@ -120,7 +141,7 @@ The following functions are exposed, and can be used for an independent JS imple
  * @returns {int} result The number of indicies generated. A result of -1 denotes an error.
  */
 
-int initialize_index()
+int initialize_index();
 ```
 
 ```c
@@ -134,12 +155,12 @@ int initialize_index()
  *
  * @param {char*} input The string to be tokenized and searched on. This is required to be
  *                      null terminated.
- * @param {int*} output_array Array that the indexes will be assigned to.
+ * @param {bool*} output_array Array that the indexes will be assigned to.
  * @result {int} result The length of the output string. A value of -1 denotes an error. 
  *                      A value of 0 denotes no results.
  *
  */
-int initiate_search(char* input, int* output_array)
+int initiate_search(char* input, bool* output_array);
 ```
 
 ```c
@@ -151,13 +172,13 @@ int initiate_search(char* input, int* output_array)
  * value previously returned by initiate_search.
  * The urls will be deliniated by '||'.
  *
- * @param {int*} urls_index The mapping.
+ * @param {bool*} should_add_array The array of urls that should be added.
  * @param {char*} output_array Array that will be filled with the url result.
  * @result {int} result The length of the output string. A value of -1 denotes an error. 
  *                      A value of 0 denotes no results.
  *
  */
-void finalize_search(int* urls_index, char* output_array)
+void finalize_search(bool* should_add_array, char* output_array)
 ```
 
 ```c
