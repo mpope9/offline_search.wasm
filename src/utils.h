@@ -14,9 +14,15 @@
 
 #include "stop_words.h"
 #include "porter_stemmer.h"
+#include "metaphone.h"
+#include "xxhash64.h"
 
 #define INITIAL_TOKENS_SIZE 256
 #define STRTOK_SEPERATORS " \n\r\t;&.,:"
+
+#define MAX_PHONEMES 6
+
+#define HASH_SEED 100
 
 /**
  * Tests if a word is a 'stop word'.
@@ -109,29 +115,13 @@ char** tokenize(char* input, int* tokens_length)
 }
 
 /**
- * (Once upon a)
- * Jenkins One At a Time Hash
- */
-uint64_t hash_token(char* str)
-{
-   uint64_t hash, i;
-   for(hash = i = 0; i < strlen(str); ++i)
-   {
-      hash += str[i];
-      hash += (hash << 10);
-      hash ^= (hash >> 6);
-   }
-   hash += (hash << 3);
-   hash ^= (hash >> 11);
-   hash += (hash << 15);
-   return hash;
-}
-
-/**
- * Combined stemming, and hashing.
+ * Combined stemming, fuzzysearch (metaphone), and hashing.
  */
 void stem_n_hash(char** tokens, int tokens_length, uint64_t* hashes, int* hashes_length_out)
 {
+
+   // Stemming, modifies string in-place, and needs null termination.
+   struct stemmer* stemmer = create_stemmer();
 
    int hashes_length = 0;
    for(int i = 0; i < tokens_length; i++)
@@ -139,20 +129,26 @@ void stem_n_hash(char** tokens, int tokens_length, uint64_t* hashes, int* hashes
       char* token = tokens[i];
       int token_length = strlen(token);
 
-      // Stemming, modifies string in-place, and needs null termination.
-      struct stemmer* stemmer = create_stemmer();
-
       int new_length = stem(stemmer, token, token_length - 1);
       if(new_length < token_length)
       {
          token[new_length + 1] = '\0';
       }
 
-      free_stemmer(stemmer);
+      char* meta = metaphone(token, MAX_PHONEMES);
 
-      hashes[hashes_length] = hash_token(token);
+      hashes[hashes_length] = hash(meta, strlen(meta), HASH_SEED);
       hashes_length++;
+
+      free(meta);
+
+      // Reset stemmer
+      stemmer->k = 0;
+      stemmer->j = 0;
+      stemmer->b = NULL;
    }
+
+   free_stemmer(stemmer);
 
    *hashes_length_out = hashes_length;
 }

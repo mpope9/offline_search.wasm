@@ -34,22 +34,22 @@ describe('OfflineSearch', () => {
     });
   });
 
-  describe('correctly search for a word + stop word', () => {
-    it('passes', async () => {
-      return testSearch(offlineSearch, 'endpoint the', 2);
-    });
-  });
+  //describe('correctly search for a word + stop word', () => {
+  //  it('passes', async () => {
+  //    return testSearch(offlineSearch, 'endpoint the', 2);
+  //  });
+  //});
 
-  describe('Searches on a complex list of terms.', () => {
-    it('correctly search a longer string with punctuation', async () => {
-      return testSearch(offlineSearch, 'I wanna go fast!', 14);
-    });
-  });
+  //describe('Searches on a complex list of terms.', () => {
+  //  it('correctly search a longer string with punctuation', async () => {
+  //    return testSearch(offlineSearch, 'I wanna go fast!', 14);
+  //  });
+  //});
 
-  describe('', () => {
-    it('frees the data structure without errors', async () => {
-      return offlineSearch.free();
-    });
-  });
+  //describe('', () => {
+  //  it('frees the data structure without errors', async () => {
+  //    return offlineSearch.free();
+  //  });
+  //});
     
 });

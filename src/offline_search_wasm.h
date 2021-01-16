@@ -37,12 +37,12 @@ int initialize_index();
  *
  * @param {char*} input The string to be tokenized and searched on. This is required to be
  *                      null terminated.
- * @param {bool*} output_array Array that the indexes will be assigned to.
+ * @param {int8_t*} output_array Array that the indexes will be assigned to.
  * @result {int} result The length of the output string. A value of -1 denotes an error. 
  *                      A value of 0 denotes no results.
  *
  */
-int initiate_search(char* input, bool* output_array);
+int initiate_search(char* input, int8_t* output_array);
 
 /**
  * finalize_search
@@ -52,13 +52,13 @@ int initiate_search(char* input, bool* output_array);
  * value previously returned by initiate_search.
  * The urls will be deliniated by '||'.
  *
- * @param {bool*} should_add_array The array of urls that should be added.
+ * @param {int8_t*} should_add_array The array of urls that should be added.
  * @param {char*} output_array Array that will be filled with the url result.
  * @result {int} result The length of the output string. A value of -1 denotes an error. 
  *                      A value of 0 denotes no results.
  *
  */
-void finalize_search(bool* should_add_array, char* output_array);
+void finalize_search(int8_t* should_add_array, char* output_array);
 
 /**
  * free_index

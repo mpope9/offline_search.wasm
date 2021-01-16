@@ -9,6 +9,7 @@ This is a library to generate Webassembly bindings for a full-text search index 
 * Extremely small index size.
 * [Stemming](https://en.wikipedia.org/wiki/Stemming).
 * [Stop word filtering](https://www.elastic.co/guide/en/elasticsearch/reference/current/analysis-stop-tokenfilter.html).
+* [Fuzzy search](http://aspell.net/metaphone/) (matching on misspelled words).
 * Full text search.
 
 ## :zap: Usage
@@ -90,9 +91,10 @@ Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.co
    * offline_search.wasm utilizes [xor_filters](https://github.com/FastFilter/xor_singleheader) to create indexes. 
       * These are smaller in size than Bloom Filters, and have a smaller false positive rate.
 3) More features
-   * Full-Text Search through Stemming.
+   * Stemming through the [PorterStemmer](https://tartarus.org/martin/PorterStemmer/index.html).
    * Stop word filtering.
    * [smaz](https://github.com/antirez/smaz) compression on mapped strings.
+   * Fuzzy search through [Metaphone](http://aspell.net/metaphone/), implementation found [here](https://metacpan.org/pod/Text::Metaphone).
 
 
 ## :rotating_light: Tests
