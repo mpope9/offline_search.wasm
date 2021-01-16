@@ -183,7 +183,9 @@ uint64_t hash_internal(XXHash64* hasher)
   @return 64 bit XXHash **/
 uint64_t hash(const void* input, uint64_t length, uint64_t seed)
 {
+   unsigned char buf[MaxBufferSize];
    XXHash64 hasher;
+
    hasher.seed = seed;
    hasher.state[0] = seed + Prime1 + Prime2;
    hasher.state[1] = seed + Prime2;
@@ -191,13 +193,10 @@ uint64_t hash(const void* input, uint64_t length, uint64_t seed)
    hasher.state[3] = seed - Prime1;
    hasher.bufferSize  = 0;
    hasher.totalLength = 0;
-   hasher.buffer = malloc(sizeof(unsigned char) * MaxBufferSize);
+   hasher.buffer = buf;
 
    add(input, length, &hasher);
-   uint64_t result = hash_internal(&hasher);
 
-   free(hasher.buffer);
-
-   return result;
+   return hash_internal(&hasher);
 }
 
