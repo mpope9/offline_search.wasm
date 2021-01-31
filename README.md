@@ -1,15 +1,15 @@
 # offline_search.wasm
 
-This is a library to generate Webassembly bindings for a full-text offline search index backed by [xor filters](https://github.com/FastFilter/xor_singleheader). It is heavily inspired by Tinysearch & elasticlunr.js. This library strives to strike a balance between the highest level of size efficiency, performance, and features.
+This is a library to generate Webassembly bindings for a full-text offline search index backed by [xor filters](https://github.com/FastFilter/xor_singleheader). It is heavily inspired by `tinysearch` & `elasticlunr.js`. This library strives to strike a balance between the highest level of size efficiency, performance, and features.
 
-## :muscle: Index Size Comparisons From [tinysearch.js Example File](https://github.com/tinysearch/tinysearch/blob/master/fixtures/index.json)
+## :muscle: Index Size Comparisons From [tinysearch Example File](https://github.com/tinysearch/tinysearch/blob/master/fixtures/index.json)
 
-TL;DR: `offline_search.wasm`'s index is **~30%** smaller than `tinysearch.js` and **~190%** smaller than `elasticlunr.js`.
+TL;DR: `offline_search.wasm`'s index is **~30%** smaller than `tinysearch` and **~190%** smaller than `elasticlunr.js`.
 
 | Source | Size |
 | --- | --- |
 | offline_search.wasm | 11k |
-| tinysearch.js | 15k |
+| tinysearch | 15k |
 | raw | 192k |
 | elasticlunr.js | 437K |
 
@@ -81,7 +81,7 @@ Here is how to use it from HTML:
 
 
 ## :sparkles: Implementation Comparisons
-Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.com/weixsong/elasticlunr.js) and [Tinysearch](https://github.com/tinysearch/tinysearch). These libraries are very high quality, and their work is greatly appreciated.
+Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.com/weixsong/elasticlunr.js) and [tinysearch](https://github.com/tinysearch/tinysearch). These libraries are very high quality, and their work is greatly appreciated.
 
 #### In comparision to `elasticlunr.js`:
 1) Smaller and more efficient.
@@ -96,13 +96,13 @@ Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.co
    * `elasticlunr.js` supports it.
    * `offline_search.wasm` does not.
 
-#### In comparision to `Tinysearch`:
+#### In comparision to `yinysearch`:
 1) Written in C.
-   * Tinysearch is written in Rust.
+   * `tinysearch` is written in Rust.
    * offline_search.wasm is written mostly in C and Javascript, and the example implementation relies on Node.js to build the index.
    * Using Javascript should be more familiar to those in the web world, C is a simpler language, and C is eaiser to optimize for size currently.
 2) Smaller index size.
-   * Tinysearch utilizes [Bloom Filters](https://en.wikipedia.org/wiki/Bloom_filter) to create indexes.
+   * `tinysearch` utilizes [Bloom Filters](https://en.wikipedia.org/wiki/Bloom_filter) to create indexes.
    * offline_search.wasm utilizes [xor_filters](https://github.com/FastFilter/xor_singleheader) to create indexes. 
       * These are smaller in size than Bloom Filters, and have a smaller false positive rate.
 3) More features
