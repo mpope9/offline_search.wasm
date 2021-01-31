@@ -10,7 +10,7 @@
 extern "C" {
 #endif
 
-// Global variable bad. Move to `offline_search_t`.
+// Global variable bad. Only allows fo one index. Move to `offline_search_t`.
 char** urls = NULL;
 int* urls_lengths = NULL;
 xor8_t** indexes = NULL;
@@ -106,7 +106,7 @@ int initialize_index()
  *
  * @param {char*} input The string to be tokenized and searched on. This is required to be
  *                      null terminated.
- * @param {uint8_t*} output_array Array that the indexes will be assigned to.
+ * @param {int8_t*} output_array Array that the indexes will be assigned to.
  * @result {int} result The length of the output string. A value of -1 denotes an error. 
  *                      A value of 0 denotes no results.
  *
@@ -148,17 +148,18 @@ int initiate_search(char* input, int8_t* output_array)
    }
    free(tokens);
 
-   // Skip the overhead of deduping.
+   // Skip the overhead of deduping hashes.
 
    int output_size = 0;
-   bool should_add = false;
+   bool should_add = true;
    for(int i = 0; i < indexes_length; i++) 
    {
       for(int j = 0; j < hashes_length; j++)
       {
-         if(xor8_contain(hashes[j], indexes[i])) 
+         if(!xor8_contain(hashes[j], indexes[i])) 
          {
-            should_add = true;
+            should_add = false;
+            break;
          }
       }
 
@@ -172,7 +173,7 @@ int initiate_search(char* input, int8_t* output_array)
       {
          output_array[i] = 1;
       }
-      should_add = false;
+      should_add = true;
    }
 
    return output_size;
@@ -215,9 +216,9 @@ void finalize_search(int8_t* should_add_array, char* output_array)
    }
 
    int output_index = 0;
-   for(int i = 0; i < indexes_length; i++)
+   for(int i = 0; i < indexes_length; ++i)
    {
-      if(!should_add_array[i])
+      if(should_add_array[i])
       {
          continue;
       }

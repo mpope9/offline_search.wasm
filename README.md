@@ -1,8 +1,21 @@
 # offline_search.wasm
 
-## :rotating_light: Warning Library Not Yet Complete :rotating_light:
+This is a library to generate Webassembly bindings for a full-text offline search index backed by [xor filters](https://github.com/FastFilter/xor_singleheader). It is heavily inspired by Tinysearch & elasticlunr.js. This library strives to strike a balance between the highest level of size efficiency, performance, and features.
 
-This is a library to generate Webassembly bindings for a full-text search index backed by [xor filters](https://github.com/FastFilter/xor_singleheader). It is heavily inspired by Tinysearch & lunr.js. This library strives to strike a balance between the highest level of size efficiency, performance, and features.
+## :muscle: Index Size Comparisons From [tinysearch.js Example File](https://github.com/tinysearch/tinysearch/blob/master/fixtures/index.json)
+
+TL;DR: `offline_search.wasm`'s index is **~30%** smaller than `tinysearch.js` and **~190%** smaller than `elasticlunr.js`.
+
+| Source | Size |
+| --- | --- |
+| offline_search.wasm | 11k |
+| tinysearch.js | 15k |
+| raw | 192k |
+| elasticlunr.js | 437K |
+
+We're cheating just a little bit, because `offline_search.wasm` only returns URLs right now, and not article descriptions ;). This will be updated in future versions.
+
+`elasticlunr.js` test code can be found in `test/elasticlunr/`
 
 ## :mag: :ant: Features
 * Slim size through [Webassembly](https://webassembly.org/) using [Emscripten](https://emscripten.org/index.html).
@@ -73,13 +86,15 @@ Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.co
 #### In comparision to `elasticlunr.js`:
 1) Smaller and more efficient.
    * elasticlunr.js ships indexes as a list of strings.
-   * offline_search.wasm ships indexes as a [xor_filter](https://github.com/FastFilter/xor_singleheader), wihch are more space efficient.
+   * offline_search.wasm ships indexes as a [xor_filter](https://github.com/FastFilter/xor_singleheader), which are more space efficient.
 2) Does not support languages outside of English.
    * Yet. Stemming and tokenization algorithms in C are welcome for other languages.
 3) Support for [stemming](https://en.wikipedia.org/wiki/Stemming).
    * elasticlunr.js uses a [Javascript stemmer](https://github.com/weixsong/elasticlunr.js/blob/master/lib/stemmer.js) based off of the [PorterStemmer](https://tartarus.org/martin/PorterStemmer/index.html).
    * offline_search.wasm compiles the [threadsafe C version of PorterStemmer](https://tartarus.org/martin/PorterStemmer/c_thread_safe.txt) into the WASM. It results in a smaller, optimized binary.
-4) No support for Query-Time Boosting.
+4) Query-Time Boosting.
+   * `elasticlunr.js` supports it.
+   * `offline_search.wasm` does not.
 
 #### In comparision to `Tinysearch`:
 1) Written in C.
@@ -93,7 +108,7 @@ Here we compare `offline_search.wasm` to both [elasticlunr.js](https://github.co
 3) More features
    * Stemming through the [PorterStemmer](https://tartarus.org/martin/PorterStemmer/index.html).
    * Stop word filtering.
-   * [smaz](https://github.com/antirez/smaz) compression on mapped strings.
+   * [smaz](https://github.com/antirez/smaz) compression on urls.
    * Fuzzy search through [Metaphone](http://aspell.net/metaphone/), implementation found [here](https://metacpan.org/pod/Text::Metaphone).
 
 
@@ -103,7 +118,7 @@ Included is a [mocha](https://mochajs.org/) + [chai](https://www.chaijs.com/) + 
 npm test
 ```
 
-To run the memory leak analyzer, run:
+To run the Emscripten memory leak analyzer, run:
 ```
 npm run memory_profiler
 ```
@@ -115,6 +130,8 @@ python3 -m http.server
 ```
 And navigate to `localhost:8000`
 
+As you can see, there are no memory leaks :).
+
 Docker is required to run the tests.
 
 ## :rocket: 'Architecture'
@@ -124,8 +141,12 @@ The first part to the library is the xor_builder.js script. This is a 0 dep Node
 
 If using Node.js is an issue it shouldn't be too difficult to use that code as a guide to build an index builder in C, which can be run on a WASM Runtime locally, like [Wasmtime](https://github.com/bytecodealliance/wasmtime).
 
+Why is this part written partially in Node.js? It is easier to parse JSON in Node.js than C by default. As time goes on, we may add a C JSON parser, however it isn't a priority as of now.
+
 ### offline_search.js
 This is the library that your Javascript code should use. It will initialize the Webassembly code and load the index, and make it available for querying.
+
+As of now, we have one global index (as that is the general case for most websites?). However, in the future there are plans to support multiple indexes.
 
 The API is a bit complex. The goal of this library was to return the final result as a string to the Javascript side. This requires some juggling of memory, and should be used carefully.
 
