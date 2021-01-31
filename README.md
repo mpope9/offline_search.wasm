@@ -66,9 +66,9 @@ Here is how to use it from HTML:
 
       // Keyword search.
       offlineSearch
-        .search('endpoint')
+        .search('Cal Naughton Jr.')
         .then((value) => {
-          console.log(value);
+          console.log(value); // https://www.imdb.com/title/tt0415306/
         });
 
       // Free memory.
